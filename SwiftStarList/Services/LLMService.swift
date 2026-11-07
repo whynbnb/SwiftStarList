@@ -65,9 +65,10 @@ actor LLMService {
         )
 
         let baseURL = settings.llmConfig.baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !baseURL.isEmpty else { throw NetworkError.invalidURL }
         let path = baseURL.hasSuffix("/v1") ? "chat/completions" : "v1/chat/completions"
-        guard let url = URL(string: "\(baseURL)/\(path)") else {
-            return s.llmNoResponse
+        guard let url = URL(string: "\(baseURL)/\(path)"), url.scheme != nil else {
+            throw NetworkError.invalidURL
         }
 
         var urlRequest = URLRequest(url: url)
@@ -96,8 +97,9 @@ actor LLMService {
         var result = ""
         let decoder = JSONDecoder()
         for try await line in bytes.lines {
-            guard line.hasPrefix("data: ") else { continue }
-            let data = String(line.dropFirst(6))
+            try Task.checkCancellation()
+            guard line.hasPrefix("data:") else { continue }
+            let data = String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
             if data == "[DONE]" { break }
             guard let lineData = data.data(using: .utf8) else { continue }
             guard let chunk = try? decoder.decode(ChatCompletionStreamResponse.self, from: lineData) else { continue }

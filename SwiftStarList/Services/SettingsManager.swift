@@ -7,7 +7,7 @@ final class SettingsManager: ObservableObject {
 
     @Published var settings: AppSettings {
         didSet {
-            save()
+            persist(settings)
             if oldValue.language != settings.language {
                 languageVersion += 1
             }
@@ -18,17 +18,30 @@ final class SettingsManager: ObservableObject {
     @Published var isSettingsOpen = false
 
     private init() {
+        var loaded = AppSettings.default
         if let data = defaults.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
-            settings = decoded
-        } else {
-            settings = .default
+            loaded = decoded
         }
+
+        let credentials = CredentialStore.load()
+        loaded.githubToken = credentials?.githubToken ?? ""
+        loaded.llmConfig.apiKey = credentials?.apiKey ?? ""
+        settings = loaded
     }
 
-    private func save() {
-        if let data = try? JSONEncoder().encode(settings) {
+    private func persist(_ settings: AppSettings) {
+        var redacted = settings
+        redacted.githubToken = ""
+        redacted.llmConfig.apiKey = ""
+
+        if let data = try? JSONEncoder().encode(redacted) {
             defaults.set(data, forKey: settingsKey)
         }
+
+        CredentialStore.save(.init(
+            githubToken: settings.githubToken,
+            apiKey: settings.llmConfig.apiKey
+        ))
     }
 }

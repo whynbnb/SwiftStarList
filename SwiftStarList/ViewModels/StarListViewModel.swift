@@ -184,16 +184,15 @@ final class StarListViewModel: ObservableObject {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
-        isFromCache = false
-        repos = []
-        AvatarCache.shared.clear()
         defer { isLoading = false }
 
         do {
             let allRepos = try await githubService.fetchAllStarredRepos(settings: settings)
             repos = allRepos
+            isFromCache = false
             cache.save(allRepos)
         } catch {
+            // 刷新失败时保留已有列表/缓存，只在完全没有数据时展示错误页
             if repos.isEmpty {
                 errorMessage = error.localizedDescription
             }

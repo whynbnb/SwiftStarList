@@ -5,11 +5,11 @@ struct RepoDetailView: View {
     let repo: StarredRepo
     @ObservedObject var settingsManager: SettingsManager
     @StateObject private var viewModel = RepoDetailViewModel()
-    @State private var showReadme = true
-    @State private var showAnalysis = false
-    @State private var showActivity = false
-    @State private var showInfo = false
-    @State private var showIssues = false
+    @State private var selectedTab: DetailTab = .readme
+
+    private enum DetailTab {
+        case readme, activity, info, issues, ai
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -19,28 +19,20 @@ struct RepoDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task(id: repo.id) {
-            showReadme = true
-            showAnalysis = false
-            showActivity = false
-            showInfo = false
-            showIssues = false
+            selectedTab = .readme
             viewModel.reset()
             async let readmeTask: Void = viewModel.fetchREADME(repo: repo, settings: settingsManager.settings)
             async let activityTask: Void = viewModel.fetchRepoActivity(repo: repo, settings: settingsManager.settings)
-            _ = try? await (readmeTask, activityTask)
+            _ = await (readmeTask, activityTask)
         }
     }
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                AsyncImage(url: URL(string: repo.owner.avatarUrl)) { image in
-                    image.resizable().aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    Color(nsColor: .placeholderTextColor).opacity(0.3)
-                }
-                .frame(width: 28, height: 28)
-                .clipShape(Circle())
+                CachedAvatarView(urlString: repo.owner.avatarUrl)
+                    .frame(width: 28, height: 28)
+                    .clipShape(Circle())
 
                 Text(repo.fullName)
                     .font(.title2.bold())
@@ -82,32 +74,30 @@ struct RepoDetailView: View {
             }
 
             HStack(spacing: 8) {
-                TabButton(title: L.s.readmeTab, icon: "doc.text", isSelected: showReadme && !showAnalysis && !showActivity && !showInfo && !showIssues, selectedColor: .accentColor) {
-                    showReadme = true; showAnalysis = false; showActivity = false; showInfo = false; showIssues = false
+                TabButton(title: L.s.readmeTab, icon: "doc.text", isSelected: selectedTab == .readme, selectedColor: .accentColor) {
+                    selectedTab = .readme
                 }
                 .id(settingsManager.languageVersion)
 
-                TabButton(title: L.s.activityTab, icon: "chart.bar", isSelected: showActivity, selectedColor: .green) {
-                    showActivity = true; showReadme = false; showAnalysis = false; showInfo = false; showIssues = false
+                TabButton(title: L.s.activityTab, icon: "chart.bar", isSelected: selectedTab == .activity, selectedColor: .green) {
+                    selectedTab = .activity
                 }
                 .id(settingsManager.languageVersion)
 
-                TabButton(title: L.s.infoTab, icon: "person.3", isSelected: showInfo, selectedColor: .cyan) {
-                    showInfo = true; showReadme = false; showActivity = false; showAnalysis = false; showIssues = false
+                TabButton(title: L.s.infoTab, icon: "person.3", isSelected: selectedTab == .info, selectedColor: .cyan) {
+                    selectedTab = .info
                 }
                 .id(settingsManager.languageVersion)
 
-                TabButton(title: L.s.issuesTab, icon: "ticket", isSelected: showIssues, selectedColor: .orange) {
-                    showIssues = true; showReadme = false; showActivity = false; showAnalysis = false; showInfo = false
+                TabButton(title: L.s.issuesTab, icon: "ticket", isSelected: selectedTab == .issues, selectedColor: .orange) {
+                    selectedTab = .issues
                 }
                 .id(settingsManager.languageVersion)
 
-                TabButton(title: L.s.aiTab, icon: "sparkles", isSelected: showAnalysis, selectedColor: .purple) {
-                    showAnalysis = true; showReadme = false; showActivity = false; showInfo = false; showIssues = false
+                TabButton(title: L.s.aiTab, icon: "sparkles", isSelected: selectedTab == .ai, selectedColor: .purple) {
+                    selectedTab = .ai
                     if settingsManager.settings.autoAnalyze && viewModel.analysis == nil {
-                        Task {
-                            await viewModel.analyzeRepo(repo: repo, settings: settingsManager.settings)
-                        }
+                        viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
                     }
                 }
                 .id(settingsManager.languageVersion)
@@ -120,15 +110,16 @@ struct RepoDetailView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading) {
-                    if showReadme {
+                    switch selectedTab {
+                    case .readme:
                         readmeView
-                    } else if showActivity {
+                    case .activity:
                         activityView(proxy: proxy)
-                    } else if showInfo {
+                    case .info:
                         infoView
-                    } else if showIssues {
+                    case .issues:
                         issuesView
-                    } else {
+                    case .ai:
                         analysisView(proxy: proxy)
                     }
                 }
@@ -176,6 +167,7 @@ struct RepoDetailView: View {
             .frame(maxWidth: .infinity, minHeight: 200)
         } else {
             VStack(alignment: .leading, spacing: 20) {
+                activityErrorBanner
                 tagsSection(proxy: proxy)
                 releasesSection
                 commitsSection
@@ -195,6 +187,7 @@ struct RepoDetailView: View {
             .frame(maxWidth: .infinity, minHeight: 200)
         } else {
             VStack(alignment: .leading, spacing: 20) {
+                activityErrorBanner
                 contributorsSection
                 languagesSection
                 licenseSection
@@ -214,9 +207,20 @@ struct RepoDetailView: View {
             .frame(maxWidth: .infinity, minHeight: 200)
         } else {
             VStack(alignment: .leading, spacing: 20) {
+                activityErrorBanner
                 openIssuesSection
                 openPullsSection
             }
+        }
+    }
+
+    @ViewBuilder
+    private var activityErrorBanner: some View {
+        if let message = viewModel.activityErrorMessage {
+            Label(message, systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundColor(.orange)
+                .id(settingsManager.languageVersion)
         }
     }
 
@@ -447,9 +451,7 @@ struct RepoDetailView: View {
                     .foregroundColor(.secondary)
                     .id(settingsManager.languageVersion)
                 Button(L.s.startAnalysis) {
-                    Task {
-                        await viewModel.analyzeRepo(repo: repo, settings: settingsManager.settings)
-                    }
+                    viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.purple)
@@ -474,13 +476,9 @@ struct RepoDetailView: View {
                 FlowLayout(spacing: 8) {
                     ForEach(viewModel.contributors) { contributor in
                         HStack(spacing: 4) {
-                            AsyncImage(url: URL(string: contributor.avatarUrl)) { image in
-                                image.resizable().aspectRatio(contentMode: .fit)
-                            } placeholder: {
-                                Color(nsColor: .placeholderTextColor).opacity(0.3)
-                            }
-                            .frame(width: 20, height: 20)
-                            .clipShape(Circle())
+                            CachedAvatarView(urlString: contributor.avatarUrl)
+                                .frame(width: 20, height: 20)
+                                .clipShape(Circle())
 
                             Text(contributor.login)
                                 .font(.system(size: 12))

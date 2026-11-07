@@ -14,14 +14,6 @@ enum AppLanguage: String, CaseIterable, Codable {
         }
     }
 
-    var locale: Locale {
-        switch self {
-        case .system: return Locale.current
-        case .zh: return Locale(identifier: "zh_CN")
-        case .en: return Locale(identifier: "en_US")
-        }
-    }
-
     /// 实际生效的语言：显式选择优先，`.system` 时跟随系统首选语言。
     static var resolved: AppLanguage {
         resolve(SettingsManager.shared.settings.language)

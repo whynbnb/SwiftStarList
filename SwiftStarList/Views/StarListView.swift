@@ -171,7 +171,6 @@ struct StarListView: View {
             }
         }
         .listStyle(.sidebar)
-        .id(viewModel.searchText + viewModel.searchScope.rawValue + viewModel.sortOption.rawValue + viewModel.groupOption.rawValue + String(settingsManager.languageVersion))
     }
 }
 
@@ -403,31 +402,16 @@ struct CachedAvatarView: View {
                 Color(nsColor: .placeholderTextColor).opacity(0.3)
             }
         }
-        .onAppear {
+        .task(id: urlString) {
             if let cached = AvatarCache.shared.image(for: urlString) {
-                self.image = cached
-            } else {
-                Task { await loadImage() }
+                image = cached
+                return
             }
+            image = nil
+            let loaded = await AvatarCache.shared.loadImage(for: urlString)
+            guard !Task.isCancelled else { return }
+            image = loaded
         }
-        .onChange(of: urlString) { _, _ in
-            if let cached = AvatarCache.shared.image(for: urlString) {
-                self.image = cached
-            } else {
-                image = nil
-                Task { await loadImage() }
-            }
-        }
-    }
-
-    private func loadImage() async {
-        guard let url = URL(string: urlString) else { return }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let nsImage = NSImage(data: data) else { return }
-            AvatarCache.shared.setImage(nsImage, for: urlString)
-            self.image = nsImage
-        } catch {}
     }
 }
 

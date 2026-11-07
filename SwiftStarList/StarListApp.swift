@@ -12,7 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 NSApp.appearance = SettingsManager.shared.settings.theme.appearance
             }
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate()
             NSApp.keyWindow?.makeKey()
         }
     }

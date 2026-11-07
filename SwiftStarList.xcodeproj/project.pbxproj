@@ -26,6 +26,7 @@
 		A10017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10017; };
 		A10018 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = B10018; };
 		A10019 /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
+		A10021 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 		B10016 /* TransparentTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentTheme.swift; sourceTree = "<group>"; };
 		B10017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10020 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
+		B10022 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 				B10009 /* RepoCache.swift */,
 				B10010 /* SettingsManager.swift */,
 				B10020 /* Strings.swift */,
+				B10022 /* CredentialStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -238,6 +241,7 @@
 				A10015 /* SettingsView.swift in Sources */,
 				A10016 /* TransparentTheme.swift in Sources */,
 				A10019 /* Strings.swift in Sources */,
+				A10021 /* CredentialStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

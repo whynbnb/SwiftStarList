@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 
 final class AvatarCache {
     static let shared = AvatarCache()
@@ -25,6 +26,30 @@ final class AvatarCache {
         return nil
     }
 
+    /// 下载头像，遵循 GitHub 代理配置；失败或任务被取消时返回 nil
+    func loadImage(for url: String) async -> NSImage? {
+        if let cached = image(for: url) {
+            return cached
+        }
+        guard let requestURL = URL(string: url) else { return nil }
+
+        let session = NetworkManager.shared.makeSessionForProxy(
+            SettingsManager.shared.settings.githubProxyConfig
+        )
+        do {
+            let (data, response) = try await session.data(from: requestURL)
+            guard !Task.isCancelled else { return nil }
+            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                return nil
+            }
+            guard let image = NSImage(data: data) else { return nil }
+            setImage(image, for: url)
+            return image
+        } catch {
+            return nil
+        }
+    }
+
     func setImage(_ image: NSImage, for url: String) {
         memoryCache.setObject(image, forKey: url as NSString)
         saveToDisk(image: image, url: url)
@@ -36,8 +61,10 @@ final class AvatarCache {
         try? FileManager.default.createDirectory(at: diskCacheDir, withIntermediateDirectories: true)
     }
 
+    /// base64 结果可能包含 "/"，不能直接作为文件名，改用 SHA256
     private func cacheKey(for url: String) -> String {
-        url.data(using: .utf8)?.base64EncodedString() ?? url
+        let digest = SHA256.hash(data: Data(url.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 
     private func fileURL(for url: String) -> URL {

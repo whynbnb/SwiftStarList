@@ -56,13 +56,6 @@ struct RepoOwner: Codable, Hashable {
     }
 }
 
-struct READMEContent: Codable {
-    let content: String?
-    let encoding: String?
-    let name: String
-    let path: String
-}
-
 struct RepoTag: Codable, Identifiable {
     let name: String
     let commit: TagCommit
@@ -176,11 +169,23 @@ struct RepoIssue: Codable, Identifiable {
     let createdAt: String
     let user: IssueUser?
     let labels: [IssueLabel]?
+    let pullRequest: IssuePullRequest?
 
     enum CodingKeys: String, CodingKey {
         case id, number, title, state, labels, user
         case htmlUrl = "html_url"
         case createdAt = "created_at"
+        case pullRequest = "pull_request"
+    }
+}
+
+struct IssuePullRequest: Codable {
+    let url: String?
+    let htmlUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case url
+        case htmlUrl = "html_url"
     }
 }
 

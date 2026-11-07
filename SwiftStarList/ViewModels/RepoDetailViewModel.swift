@@ -3,13 +3,19 @@ import Foundation
 @MainActor
 final class RepoDetailViewModel: ObservableObject {
     @Published var readmeContent: String?
+    @Published var readmeFailed = false
     @Published var analysis: String?
     @Published var isLoadingREADME = false
     @Published var isLoadingAnalysis = false
     @Published var errorMessage: String?
+    @Published var activityErrorMessage: String?
 
     private let githubService = GitHubService()
     private let llmService = LLMService()
+    private var analysisTask: Task<Void, Never>?
+    private var readmeGeneration = 0
+    private var activityGeneration = 0
+    private var analysisGeneration = 0
 
     @Published var recentTags: [RepoTag] = []
     @Published var recentCommits: [RepoCommit] = []
@@ -22,9 +28,16 @@ final class RepoDetailViewModel: ObservableObject {
     @Published var isLoadingActivity = false
 
     func reset() {
+        analysisGeneration += 1
+        readmeGeneration += 1
+        activityGeneration += 1
+        analysisTask?.cancel()
+        analysisTask = nil
         readmeContent = nil
+        readmeFailed = false
         analysis = nil
         errorMessage = nil
+        activityErrorMessage = nil
         isLoadingREADME = false
         isLoadingAnalysis = false
         recentTags = []
@@ -39,95 +52,129 @@ final class RepoDetailViewModel: ObservableObject {
     }
 
     func fetchREADME(repo: StarredRepo, settings: AppSettings) async {
+        readmeGeneration += 1
+        let generation = readmeGeneration
         isLoadingREADME = true
-        defer { isLoadingREADME = false }
+        defer {
+            if generation == readmeGeneration { isLoadingREADME = false }
+        }
 
         do {
-            readmeContent = try await githubService.fetchREADME(
+            let content = try await githubService.fetchREADME(
                 owner: repo.owner.login,
                 repo: repo.name,
                 settings: settings
             )
+            guard generation == readmeGeneration, !Task.isCancelled else { return }
+            readmeContent = content
+            readmeFailed = false
+        } catch is CancellationError {
+            // 切换仓库导致取消，忽略
         } catch {
+            guard generation == readmeGeneration, !Task.isCancelled else { return }
             readmeContent = L.s.cannotGetReadme
+            readmeFailed = true
         }
     }
 
-    func analyzeRepo(repo: StarredRepo, settings: AppSettings) async {
+    /// 在 ViewModel 内持有任务句柄，切仓库时可以真正取消流式分析
+    func startAnalysis(repo: StarredRepo, settings: AppSettings) {
+        analysisGeneration += 1
+        let generation = analysisGeneration
+        analysisTask?.cancel()
+        analysisTask = Task { [weak self] in
+            await self?.analyzeRepo(repo: repo, settings: settings, generation: generation)
+        }
+    }
+
+    private func analyzeRepo(repo: StarredRepo, settings: AppSettings, generation: Int) async {
         if readmeContent == nil {
             await fetchREADME(repo: repo, settings: settings)
         }
 
-        guard let readme = readmeContent, !readme.hasPrefix(L.s.cannotGetReadme) else {
-            errorMessage = L.s.readReadmeFirst
-            return
-        }
+        guard generation == analysisGeneration, !Task.isCancelled else { return }
 
-        guard !settings.llmConfig.apiKey.isEmpty else {
-            errorMessage = L.s.configureApiKey
+        guard let readme = readmeContent, !readmeFailed else {
+            if generation == analysisGeneration { errorMessage = L.s.readReadmeFirst }
             return
         }
 
         isLoadingAnalysis = true
         errorMessage = nil
         analysis = ""
-        defer { isLoadingAnalysis = false }
+        defer {
+            if generation == analysisGeneration { isLoadingAnalysis = false }
+        }
 
         do {
-            analysis = try await llmService.analyzeStream(
+            let result = try await llmService.analyzeStream(
                 repo: repo, readme: readme, settings: settings,
                 onChunk: { [weak self] partial in
+                    guard !Task.isCancelled else { return }
                     Task { @MainActor in
-                        self?.analysis = partial
+                        guard let self, generation == self.analysisGeneration else { return }
+                        self.analysis = partial
                     }
                 }
             )
+            guard generation == analysisGeneration, !Task.isCancelled else { return }
+            analysis = result
+        } catch is CancellationError {
+            // 用户切换了仓库，丢弃结果
         } catch {
-            if analysis?.isEmpty ?? true {
+            if generation == analysisGeneration, !Task.isCancelled, (analysis?.isEmpty ?? true) {
                 errorMessage = "\(L.s.analyzeFailed): \(error.localizedDescription)"
             }
         }
     }
 
     func fetchRepoActivity(repo: StarredRepo, settings: AppSettings) async {
+        activityGeneration += 1
+        let generation = activityGeneration
         isLoadingActivity = true
-        defer { isLoadingActivity = false }
+        activityErrorMessage = nil
+        defer {
+            if generation == activityGeneration { isLoadingActivity = false }
+        }
 
-        do {
-            async let tags = githubService.fetchRecentTags(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let commits = githubService.fetchRecentCommits(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let releases = githubService.fetchRecentReleases(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let contribs = githubService.fetchContributors(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let langs = githubService.fetchLanguages(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let lic = githubService.fetchLicense(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let issues = githubService.fetchOpenIssues(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            async let pulls = githubService.fetchOpenPulls(
-                owner: repo.owner.login, repo: repo.name, settings: settings
-            )
-            let (fetchedTags, fetchedCommits, fetchedReleases, fetchedContribs, fetchedLangs, fetchedLic, fetchedIssues, fetchedPulls) = try await (tags, commits, releases, contribs, langs, lic, issues, pulls)
+        let service = githubService
+        let owner = repo.owner.login
+        let name = repo.name
 
-            recentTags = fetchedTags
-            recentReleases = fetchedReleases
-            recentCommits = fetchedCommits
-            contributors = fetchedContribs
-            languages = fetchedLangs
-            license = fetchedLic
-            openIssues = fetchedIssues
-            openPulls = fetchedPulls
-        } catch {}
+        // 每个请求独立容错：单个接口失败（例如无许可证时 /license 返回 404）
+        // 不再导致整个页面为空
+        async let tagsResult = Self.capture { try await service.fetchRecentTags(owner: owner, repo: name, settings: settings) }
+        async let commitsResult = Self.capture { try await service.fetchRecentCommits(owner: owner, repo: name, settings: settings) }
+        async let releasesResult = Self.capture { try await service.fetchRecentReleases(owner: owner, repo: name, settings: settings) }
+        async let contribsResult = Self.capture { try await service.fetchContributors(owner: owner, repo: name, settings: settings) }
+        async let langsResult = Self.capture { try await service.fetchLanguages(owner: owner, repo: name, settings: settings) }
+        async let licenseResult = Self.capture { try await service.fetchLicense(owner: owner, repo: name, settings: settings) }
+        async let issuesResult = Self.capture { try await service.fetchOpenIssues(owner: owner, repo: name, settings: settings) }
+        async let pullsResult = Self.capture { try await service.fetchOpenPulls(owner: owner, repo: name, settings: settings) }
+
+        let (tags, commits, releases, contribs, langs, lic, issues, pulls) =
+            await (tagsResult, commitsResult, releasesResult, contribsResult, langsResult, licenseResult, issuesResult, pullsResult)
+
+        guard generation == activityGeneration, !Task.isCancelled else { return }
+
+        var failures = 0
+
+        if let tags { recentTags = tags } else { failures += 1 }
+        if let commits { recentCommits = commits } else { failures += 1 }
+        if let releases { recentReleases = releases } else { failures += 1 }
+        if let contribs { contributors = contribs } else { failures += 1 }
+        if let langs { languages = langs } else { failures += 1 }
+        // 没有许可证时接口返回 404，属于正常情况，不算失败
+        license = lic ?? nil
+        if let issues { openIssues = issues } else { failures += 1 }
+        if let pulls { openPulls = pulls } else { failures += 1 }
+
+        if failures > 0 {
+            activityErrorMessage = L.s.someDataFailed
+        }
+    }
+
+    private nonisolated static func capture<T>(_ operation: @escaping () async throws -> T) async -> T? {
+        try? await operation()
     }
 }

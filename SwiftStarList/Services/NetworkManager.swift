@@ -5,8 +5,6 @@ enum NetworkError: LocalizedError {
     case unauthorized
     case httpError(Int, String)
     case decodingError(Error)
-    case noData
-    case proxyConnectionFailed
 
     var errorDescription: String? {
         let s = L.s
@@ -15,8 +13,6 @@ enum NetworkError: LocalizedError {
         case .unauthorized: return s.unauthorized
         case .httpError(let code, let msg): return "\(s.httpError) \(code): \(msg)"
         case .decodingError(let e): return "\(s.decodingError): \(e.localizedDescription)"
-        case .noData: return s.noData
-        case .proxyConnectionFailed: return s.proxyConnectionFailed
         }
     }
 }
@@ -25,17 +21,11 @@ final class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
 
+    private let sessionLock = NSLock()
+    private var sessions: [String: URLSession] = [:]
+
     func request<T: Decodable>(_ url: String, settings: AppSettings, accept: String = "application/vnd.github+json") async throws -> T {
-        guard let url = URL(string: url) else { throw NetworkError.invalidURL }
-        var request = URLRequest(url: url)
-        request.setValue(accept, forHTTPHeaderField: "Accept")
-        request.setValue("Bearer \(settings.githubToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("2026-03-10", forHTTPHeaderField: "X-GitHub-Api-Version")
-
-        let session = makeSessionForProxy(settings.githubProxyConfig)
-        let (data, response) = try await session.data(for: request)
-
-        try checkResponse(response, data: data)
+        let (data, _) = try await perform(url, settings: settings, accept: accept)
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
@@ -44,16 +34,7 @@ final class NetworkManager {
     }
 
     func requestWithPagination<T: Decodable>(_ url: String, settings: AppSettings, accept: String = "application/vnd.github+json") async throws -> (T, Bool) {
-        guard let url = URL(string: url) else { throw NetworkError.invalidURL }
-        var request = URLRequest(url: url)
-        request.setValue(accept, forHTTPHeaderField: "Accept")
-        request.setValue("Bearer \(settings.githubToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("2026-03-10", forHTTPHeaderField: "X-GitHub-Api-Version")
-
-        let session = makeSessionForProxy(settings.githubProxyConfig)
-        let (data, response) = try await session.data(for: request)
-
-        try checkResponse(response, data: data)
+        let (data, response) = try await perform(url, settings: settings, accept: accept)
 
         let decoded: T
         do {
@@ -73,16 +54,8 @@ final class NetworkManager {
         return (decoded, hasNextPage)
     }
 
-    func requestRaw(_ url: String, settings: AppSettings) async throws -> Data {
-        guard let url = URL(string: url) else { throw NetworkError.invalidURL }
-        var request = URLRequest(url: url)
-        request.setValue("application/vnd.github.object", forHTTPHeaderField: "Accept")
-        request.setValue("Bearer \(settings.githubToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("2026-03-10", forHTTPHeaderField: "X-GitHub-Api-Version")
-
-        let session = makeSessionForProxy(settings.githubProxyConfig)
-        let (data, response) = try await session.data(for: request)
-        try checkResponse(response, data: data)
+    func requestRaw(_ url: String, settings: AppSettings, accept: String = "application/vnd.github.object") async throws -> Data {
+        let (data, _) = try await perform(url, settings: settings, accept: accept)
         return data
     }
 
@@ -106,20 +79,60 @@ final class NetworkManager {
         }
     }
 
+    private func perform(_ urlString: String, settings: AppSettings, accept: String) async throws -> (Data, URLResponse) {
+        guard let url = URL(string: urlString) else { throw NetworkError.invalidURL }
+        var request = URLRequest(url: url)
+        request.setValue(accept, forHTTPHeaderField: "Accept")
+        if !settings.githubToken.isEmpty {
+            request.setValue("Bearer \(settings.githubToken)", forHTTPHeaderField: "Authorization")
+        }
+        request.setValue("2026-03-10", forHTTPHeaderField: "X-GitHub-Api-Version")
+
+        let session = makeSessionForProxy(settings.githubProxyConfig)
+        let (data, response) = try await session.data(for: request)
+        try checkResponse(response, data: data)
+        return (data, response)
+    }
+
     func makeSessionForProxy(_ proxyConfig: ProxyConfig) -> URLSession {
+        let key = "\(proxyConfig.mode.rawValue)|\(proxyConfig.host)|\(proxyConfig.port)"
+
+        sessionLock.lock()
+        defer { sessionLock.unlock() }
+        if let existing = sessions[key] {
+            return existing
+        }
+
+        let config = URLSessionConfiguration.default
         switch proxyConfig.mode {
         case .none:
-            return URLSession.shared
+            // 空字典表示不使用任何代理（覆盖系统代理设置）
+            config.connectionProxyDictionary = [:]
         case .system:
-            return URLSession(configuration: .default)
-        case .http, .socks:
-            let config = URLSessionConfiguration.default
-            let proxy = proxyConfig.mode == .http
-                ? ["HTTPProxy": "\(proxyConfig.host):\(proxyConfig.port)"]
-                : ["SOCKSProxy": "\(proxyConfig.host):\(proxyConfig.port)"]
+            // nil 表示跟随系统代理设置
+            config.connectionProxyDictionary = nil
+        case .http:
+            let proxy: [AnyHashable: Any] = [
+                "HTTPEnable": 1,
+                "HTTPProxy": proxyConfig.host,
+                "HTTPPort": proxyConfig.port,
+                "HTTPSEnable": 1,
+                "HTTPSProxy": proxyConfig.host,
+                "HTTPSPort": proxyConfig.port,
+            ]
             config.connectionProxyDictionary = proxy
-            return URLSession(configuration: config)
+        case .socks:
+            let proxy: [AnyHashable: Any] = [
+                "SOCKSEnable": 1,
+                "SOCKSProxy": proxyConfig.host,
+                "SOCKSPort": proxyConfig.port,
+            ]
+            config.connectionProxyDictionary = proxy
         }
+
+        let session = URLSession(configuration: config)
+        sessions[key] = session
+        return session
     }
 
     private func checkResponse(_ response: URLResponse, data: Data) throws {

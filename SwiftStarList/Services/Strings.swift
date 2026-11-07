@@ -23,10 +23,10 @@ struct Strings {
     let scopeTopic: String
     let scopeDescription: String
     let starListTitle: String
-    let cache: String
     let showingCache: String
     let loading: String
     let loadFailed: String
+    let someDataFailed: String
     let retry: String
     let refresh: String
     let searchRepo: String
@@ -36,8 +36,6 @@ struct Strings {
     let aiTab: String
     let loadingReadme: String
     let cannotGetReadme: String
-    let cannotReadReadme: String
-    let base64Failed: String
     let encodingFailed: String
     let analyzing: String
     let analyzeRepo: String
@@ -74,12 +72,8 @@ struct Strings {
     let unauthorized: String
     let httpError: String
     let decodingError: String
-    let noData: String
-    let proxyConnectionFailed: String
     let sortLabel: String
     let groupLabel: String
-    let proxyHost: String
-    let proxyPort: String
     let activityTab: String
     let recentTags: String
     let recentCommits: String
@@ -120,10 +114,10 @@ struct Strings {
         scopeTopic: "标签",
         scopeDescription: "描述",
         starListTitle: "Star 列表",
-        cache: "缓存",
         showingCache: "正在显示本地缓存",
         loading: "加载中...",
         loadFailed: "加载失败",
+        someDataFailed: "部分数据加载失败",
         retry: "重试",
         refresh: "刷新",
         searchRepo: "搜索仓库...",
@@ -133,8 +127,6 @@ struct Strings {
         aiTab: "AI 分析",
         loadingReadme: "加载README...",
         cannotGetReadme: "无法获取README",
-        cannotReadReadme: "无法读取README内容",
-        base64Failed: "Base64解码失败",
         encodingFailed: "编码转换失败",
         analyzing: "AI 正在分析...",
         analyzeRepo: "点击下方按钮让AI分析此仓库",
@@ -168,15 +160,11 @@ struct Strings {
         other: "其他",
         unknown: "未知",
         invalidURL: "无效的URL",
-        unauthorized: "未授权，请检查GitHub Token",
+        unauthorized: "未授权，请检查 Token 或 API Key",
         httpError: "HTTP错误",
         decodingError: "解码错误",
-        noData: "无数据返回",
-        proxyConnectionFailed: "代理连接失败",
         sortLabel: "排序",
         groupLabel: "分组",
-        proxyHost: "主机地址",
-        proxyPort: "端口",
         activityTab: "动态",
         recentTags: "最近标签",
         recentCommits: "最近提交",
@@ -218,10 +206,10 @@ struct Strings {
         scopeTopic: "Topic",
         scopeDescription: "Description",
         starListTitle: "Star List",
-        cache: "Cache",
         showingCache: "Showing cached data",
         loading: "Loading...",
         loadFailed: "Load Failed",
+        someDataFailed: "Some data failed to load",
         retry: "Retry",
         refresh: "Refresh",
         searchRepo: "Search repos...",
@@ -231,8 +219,6 @@ struct Strings {
         aiTab: "AI Analysis",
         loadingReadme: "Loading README...",
         cannotGetReadme: "Unable to get README",
-        cannotReadReadme: "Unable to read README",
-        base64Failed: "Base64 decode failed",
         encodingFailed: "Encoding conversion failed",
         analyzing: "AI is analyzing...",
         analyzeRepo: "Click the button below to let AI analyze this repo",
@@ -266,15 +252,11 @@ struct Strings {
         other: "Other",
         unknown: "Unknown",
         invalidURL: "Invalid URL",
-        unauthorized: "Unauthorized, please check GitHub Token",
+        unauthorized: "Unauthorized, please check your token or API key",
         httpError: "HTTP Error",
         decodingError: "Decoding error",
-        noData: "No data returned",
-        proxyConnectionFailed: "Proxy connection failed",
         sortLabel: "Sort",
         groupLabel: "Group",
-        proxyHost: "Host",
-        proxyPort: "Port",
         activityTab: "Activity",
         recentTags: "Recent Tags",
         recentCommits: "Recent Commits",

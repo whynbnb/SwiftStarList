@@ -26,17 +26,15 @@ actor GitHubService {
     }
 
     func fetchREADME(owner: String, repo: String, settings: AppSettings) async throws -> String {
-        let url = "https://api.github.com/repos/\(owner)/\(repo)/contents/README.md"
-        let data = try await network.requestRaw(url, settings: settings)
-        let readme = try JSONDecoder().decode(READMEContent.self, from: data)
-        guard let content = readme.content, readme.encoding == "base64" else {
-            return L.s.cannotReadReadme
+        // /readme 会自动匹配 README.md / readme.rst 等任意支持的命名与大小写
+        let url = "https://api.github.com/repos/\(owner)/\(repo)/readme"
+        let data = try await network.requestRaw(url, settings: settings, accept: "application/vnd.github.raw")
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw NetworkError.decodingError(
+                DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: L.s.encodingFailed))
+            )
         }
-        let cleaned = content.replacingOccurrences(of: "\n", with: "")
-        guard let decodedData = Data(base64Encoded: cleaned) else {
-            return L.s.base64Failed
-        }
-        return String(data: decodedData, encoding: .utf8) ?? L.s.encodingFailed
+        return text
     }
 
     func fetchRecentTags(owner: String, repo: String, settings: AppSettings, perPage: Int = 10) async throws -> [RepoTag] {
@@ -74,7 +72,9 @@ actor GitHubService {
 
     func fetchOpenIssues(owner: String, repo: String, settings: AppSettings, perPage: Int = 5) async throws -> [RepoIssue] {
         let url = "https://api.github.com/repos/\(owner)/\(repo)/issues?state=open&sort=created&direction=desc&per_page=\(perPage)"
-        return try await network.request(url, settings: settings)
+        let issues: [RepoIssue] = try await network.request(url, settings: settings)
+        // /issues 也会返回 PR，这里只保留真正的 issue
+        return issues.filter { $0.pullRequest == nil }
     }
 
     func fetchOpenPulls(owner: String, repo: String, settings: AppSettings, perPage: Int = 5) async throws -> [RepoPullRequest] {
