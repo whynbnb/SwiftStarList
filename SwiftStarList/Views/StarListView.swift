@@ -198,6 +198,23 @@ struct SearchBar: View {
     }
 }
 
+/// 第一次悬浮需要停留较久；一旦预览已打开，短时间内切到下一个条目会更快显示
+@MainActor
+private enum HoverPreviewState {
+    static var lastShownAt: Date?
+    private static let fastWindow: TimeInterval = 4
+    private static let slowDelay: Duration = .milliseconds(1250)
+    private static let fastDelay: Duration = .milliseconds(250)
+
+    static var currentDelay: Duration {
+        guard let lastShownAt,
+              Date().timeIntervalSince(lastShownAt) < fastWindow else {
+            return slowDelay
+        }
+        return fastDelay
+    }
+}
+
 struct StarRowView: View {
     let repo: StarredRepo
     @State private var hoverTask: Task<Void, Never>?
@@ -210,10 +227,12 @@ struct StarRowView: View {
                 hoverTask?.cancel()
                 hideTask?.cancel()
                 if hovering {
+                    let delay = HoverPreviewState.currentDelay
                     hoverTask = Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(600))
+                        try? await Task.sleep(for: delay)
                         guard !Task.isCancelled else { return }
                         showDetail = true
+                        HoverPreviewState.lastShownAt = Date()
                     }
                 } else {
                     // 留一点时间，让指针可以移入浮层查看/选择文字
