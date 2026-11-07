@@ -407,6 +407,14 @@ struct RepoDetailView: View {
                     .foregroundColor(.orange)
                 Text(error)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 24)
+                Button(L.s.reanalyze) {
+                    viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.purple)
             }
             .frame(maxWidth: .infinity, minHeight: 200)
         } else if let result = viewModel.analysisResult {

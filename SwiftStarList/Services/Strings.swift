@@ -67,6 +67,15 @@ struct Strings {
     let baseURL: String
     let apiKey: String
     let model: String
+    let llmProfile: String
+    let profileName: String
+    let addProfile: String
+    let deleteProfile: String
+    let setDefaultProfile: String
+    let defaultProfile: String
+    let defaultSuffix: String
+    let unnamedProfile: String
+    let analysisSection: String
     let proxyMode: String
     let host: String
     let port: String
@@ -86,6 +95,7 @@ struct Strings {
     let other: String
     let unknown: String
     let invalidURL: String
+    let invalidConfiguration: String
     let unauthorized: String
     let httpError: String
     let decodingError: String
@@ -175,6 +185,15 @@ struct Strings {
         baseURL: "Base URL",
         apiKey: "API Key",
         model: "Model",
+        llmProfile: "配置",
+        profileName: "名称",
+        addProfile: "添加配置",
+        deleteProfile: "删除",
+        setDefaultProfile: "设为默认",
+        defaultProfile: "默认",
+        defaultSuffix: "（默认）",
+        unnamedProfile: "未命名",
+        analysisSection: "分析",
         proxyMode: "代理模式",
         host: "主机地址",
         port: "端口",
@@ -194,6 +213,7 @@ struct Strings {
         other: "其他",
         unknown: "未知",
         invalidURL: "无效的URL",
+        invalidConfiguration: "LLM 配置不完整（Base URL 或模型为空）",
         unauthorized: "未授权，请检查 Token 或 API Key",
         httpError: "HTTP错误",
         decodingError: "解码错误",
@@ -284,6 +304,15 @@ struct Strings {
         baseURL: "Base URL",
         apiKey: "API Key",
         model: "Model",
+        llmProfile: "Profile",
+        profileName: "Name",
+        addProfile: "Add Profile",
+        deleteProfile: "Delete",
+        setDefaultProfile: "Set as Default",
+        defaultProfile: "Default",
+        defaultSuffix: " (Default)",
+        unnamedProfile: "Unnamed",
+        analysisSection: "Analysis",
         proxyMode: "Proxy Mode",
         host: "Host",
         port: "Port",
@@ -303,6 +332,7 @@ struct Strings {
         other: "Other",
         unknown: "Unknown",
         invalidURL: "Invalid URL",
+        invalidConfiguration: "Incomplete LLM configuration (Base URL or model is empty)",
         unauthorized: "Unauthorized, please check your token or API key",
         httpError: "HTTP Error",
         decodingError: "Decoding error",

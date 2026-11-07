@@ -114,20 +114,97 @@ struct ProxyConfig: Codable {
     static let `default` = ProxyConfig(mode: .none, host: "127.0.0.1", port: 7890)
 }
 
-struct LLMConfig: Codable {
+struct LLMProfile: Identifiable, Codable {
+    var id: UUID
+    var name: String
     var baseURL: String
     var apiKey: String
     var model: String
     var proxyConfig: ProxyConfig
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        baseURL: String,
+        apiKey: String,
+        model: String,
+        proxyConfig: ProxyConfig
+    ) {
+        self.id = id
+        self.name = name
+        self.baseURL = baseURL
+        self.apiKey = apiKey
+        self.model = model
+        self.proxyConfig = proxyConfig
+    }
+}
+
+struct LLMConfig: Codable {
+    var profiles: [LLMProfile]
+    var defaultProfileID: UUID?
     var customPrompt: String?
 
-    static let `default` = LLMConfig(
-        baseURL: "https://api.openai.com",
-        apiKey: "",
-        model: "gpt-4o-mini",
-        proxyConfig: .default,
-        customPrompt: nil
-    )
+    var defaultProfile: LLMProfile? {
+        if let defaultProfileID,
+           let profile = profiles.first(where: { $0.id == defaultProfileID }) {
+            return profile
+        }
+        return profiles.first
+    }
+
+    static let `default`: LLMConfig = {
+        let profile = LLMProfile(
+            name: "Default",
+            baseURL: "https://api.openai.com",
+            apiKey: "",
+            model: "gpt-4o-mini",
+            proxyConfig: .default
+        )
+        return LLMConfig(profiles: [profile], defaultProfileID: profile.id, customPrompt: nil)
+    }()
+
+    init(profiles: [LLMProfile], defaultProfileID: UUID?, customPrompt: String?) {
+        self.profiles = profiles
+        self.defaultProfileID = defaultProfileID
+        self.customPrompt = customPrompt
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case profiles
+        case defaultProfileID
+        case customPrompt
+    }
+
+    private enum LegacyCodingKeys: String, CodingKey {
+        case baseURL
+        case apiKey
+        case model
+        case proxyConfig
+    }
+
+    // 旧版本只有单个 LLM 配置，这里转换成第一个 profile
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        customPrompt = try container.decodeIfPresent(String.self, forKey: .customPrompt)
+
+        if let decodedProfiles = try container.decodeIfPresent([LLMProfile].self, forKey: .profiles),
+           !decodedProfiles.isEmpty {
+            profiles = decodedProfiles
+            defaultProfileID = try container.decodeIfPresent(UUID.self, forKey: .defaultProfileID)
+                ?? decodedProfiles.first?.id
+        } else {
+            let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
+            let profile = LLMProfile(
+                name: "Default",
+                baseURL: try legacy.decodeIfPresent(String.self, forKey: .baseURL) ?? "https://api.openai.com",
+                apiKey: try legacy.decodeIfPresent(String.self, forKey: .apiKey) ?? "",
+                model: try legacy.decodeIfPresent(String.self, forKey: .model) ?? "gpt-4o-mini",
+                proxyConfig: try legacy.decodeIfPresent(ProxyConfig.self, forKey: .proxyConfig) ?? .default
+            )
+            profiles = [profile]
+            defaultProfileID = profile.id
+        }
+    }
 }
 
 struct AppSettings: Codable {

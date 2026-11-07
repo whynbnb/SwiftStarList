@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settingsManager: SettingsManager
     @State private var showToken = false
+    @State private var editingProfileID: UUID?
 
     var body: some View {
         TabView {
@@ -16,7 +17,7 @@ struct SettingsView: View {
                 .tabItem { Label("LLM", systemImage: "sparkles") }
         }
         .id(settingsManager.languageVersion)
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 460)
         .onDisappear {
             settingsManager.isSettingsOpen = false
             if settingsManager.settings.theme == .system {
@@ -76,22 +77,66 @@ struct SettingsView: View {
     private var llmTab: some View {
         Form {
             Section(L.s.llmSection) {
-                TextField(L.s.baseURL, text: $settingsManager.settings.llmConfig.baseURL)
-                    .textContentType(.URL)
-                    .autocorrectionDisabled()
-                SecureField(L.s.apiKey, text: $settingsManager.settings.llmConfig.apiKey)
-                TextField(L.s.model, text: $settingsManager.settings.llmConfig.model)
-                    .autocorrectionDisabled()
+                Picker(L.s.llmProfile, selection: editingProfileBinding) {
+                    ForEach(settingsManager.settings.llmConfig.profiles) { profile in
+                        Text(profileLabel(profile)).tag(profile.id)
+                    }
+                }
 
-                ProxyConfigSection(config: $settingsManager.settings.llmConfig.proxyConfig)
+                HStack(spacing: 10) {
+                    Button {
+                        addProfile()
+                    } label: {
+                        Label(L.s.addProfile, systemImage: "plus")
+                    }
+                    .buttonStyle(.borderless)
 
+                    Button {
+                        deleteEditingProfile()
+                    } label: {
+                        Label(L.s.deleteProfile, systemImage: "minus")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(settingsManager.settings.llmConfig.profiles.count <= 1)
+
+                    Spacer()
+
+                    if isEditingProfileDefault {
+                        Label(L.s.defaultProfile, systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    } else {
+                        Button(L.s.setDefaultProfile) {
+                            if let index = editingProfileIndex {
+                                settingsManager.settings.llmConfig.defaultProfileID =
+                                    settingsManager.settings.llmConfig.profiles[index].id
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+
+                if let index = editingProfileIndex {
+                    TextField(L.s.profileName, text: $settingsManager.settings.llmConfig.profiles[index].name)
+                        .autocorrectionDisabled()
+                    TextField(L.s.baseURL, text: $settingsManager.settings.llmConfig.profiles[index].baseURL)
+                        .textContentType(.URL)
+                        .autocorrectionDisabled()
+                    SecureField(L.s.apiKey, text: $settingsManager.settings.llmConfig.profiles[index].apiKey)
+                    TextField(L.s.model, text: $settingsManager.settings.llmConfig.profiles[index].model)
+                        .autocorrectionDisabled()
+                    ProxyConfigSection(config: $settingsManager.settings.llmConfig.profiles[index].proxyConfig)
+                }
+            }
+
+            Section(L.s.analysisSection) {
                 Toggle(L.s.autoAnalyze, isOn: $settingsManager.settings.autoAnalyze)
             }
 
             Section(L.s.customPrompt) {
                 TextEditor(text: customPromptBinding)
                     .font(.system(size: 12))
-                    .frame(minHeight: 72)
+                    .frame(minHeight: 64)
 
                 Text(L.s.customPromptHint)
                     .font(.caption)
@@ -99,6 +144,43 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear {
+            ensureEditingProfile()
+        }
+        .onChange(of: settingsManager.settings.llmConfig.profiles.map(\.id)) { _, _ in
+            ensureEditingProfile()
+        }
+    }
+
+    private var editingProfileIndex: Int? {
+        let profiles = settingsManager.settings.llmConfig.profiles
+        if let editingProfileID,
+           let index = profiles.firstIndex(where: { $0.id == editingProfileID }) {
+            return index
+        }
+        if let defaultID = settingsManager.settings.llmConfig.defaultProfile?.id,
+           let index = profiles.firstIndex(where: { $0.id == defaultID }) {
+            return index
+        }
+        return profiles.indices.first
+    }
+
+    private var editingProfileBinding: Binding<UUID> {
+        Binding(
+            get: {
+                editingProfileID
+                    ?? settingsManager.settings.llmConfig.defaultProfile?.id
+                    ?? settingsManager.settings.llmConfig.profiles.first?.id
+                    ?? UUID()
+            },
+            set: { editingProfileID = $0 }
+        )
+    }
+
+    private var isEditingProfileDefault: Bool {
+        guard let index = editingProfileIndex else { return false }
+        let profile = settingsManager.settings.llmConfig.profiles[index]
+        return settingsManager.settings.llmConfig.defaultProfile?.id == profile.id
     }
 
     private var customPromptBinding: Binding<String> {
@@ -106,6 +188,48 @@ struct SettingsView: View {
             get: { settingsManager.settings.llmConfig.customPrompt ?? "" },
             set: { settingsManager.settings.llmConfig.customPrompt = $0.isEmpty ? nil : $0 }
         )
+    }
+
+    private func profileLabel(_ profile: LLMProfile) -> String {
+        let name = profile.name.isEmpty ? L.s.unnamedProfile : profile.name
+        let isDefault = settingsManager.settings.llmConfig.defaultProfile?.id == profile.id
+        return isDefault ? name + L.s.defaultSuffix : name
+    }
+
+    private func ensureEditingProfile() {
+        let profiles = settingsManager.settings.llmConfig.profiles
+        if let editingProfileID, profiles.contains(where: { $0.id == editingProfileID }) {
+            return
+        }
+        editingProfileID = settingsManager.settings.llmConfig.defaultProfile?.id ?? profiles.first?.id
+    }
+
+    private func addProfile() {
+        let profile = LLMProfile(
+            name: "LLM \(settingsManager.settings.llmConfig.profiles.count + 1)",
+            baseURL: "",
+            apiKey: "",
+            model: "",
+            proxyConfig: .default
+        )
+        settingsManager.settings.llmConfig.profiles.append(profile)
+        editingProfileID = profile.id
+    }
+
+    private func deleteEditingProfile() {
+        guard let index = editingProfileIndex,
+              settingsManager.settings.llmConfig.profiles.count > 1 else { return }
+
+        let removed = settingsManager.settings.llmConfig.profiles.remove(at: index)
+        if settingsManager.settings.llmConfig.defaultProfileID == removed.id {
+            settingsManager.settings.llmConfig.defaultProfileID =
+                settingsManager.settings.llmConfig.profiles.first?.id
+        }
+
+        let profiles = settingsManager.settings.llmConfig.profiles
+        if !profiles.isEmpty {
+            editingProfileID = profiles[min(index, profiles.count - 1)].id
+        }
     }
 }
 

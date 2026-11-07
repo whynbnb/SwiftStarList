@@ -84,6 +84,10 @@ final class RepoDetailViewModel: ObservableObject {
         analysisGeneration += 1
         let generation = analysisGeneration
         analysisTask?.cancel()
+        errorMessage = nil
+        analysisResult = nil
+        analysis = ""
+        isLoadingAnalysis = true
         analysisTask = Task { [weak self] in
             await self?.analyzeRepo(repo: repo, settings: settings, generation: generation)
         }

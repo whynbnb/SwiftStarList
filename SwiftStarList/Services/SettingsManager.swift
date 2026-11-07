@@ -24,24 +24,53 @@ final class SettingsManager: ObservableObject {
             loaded = decoded
         }
 
+        if loaded.llmConfig.profiles.isEmpty {
+            loaded.llmConfig = .default
+        }
+        if loaded.llmConfig.defaultProfileID == nil
+            || !loaded.llmConfig.profiles.contains(where: { $0.id == loaded.llmConfig.defaultProfileID }) {
+            loaded.llmConfig.defaultProfileID = loaded.llmConfig.profiles.first?.id
+        }
+
         let credentials = CredentialStore.load()
         loaded.githubToken = credentials?.githubToken ?? ""
-        loaded.llmConfig.apiKey = credentials?.apiKey ?? ""
+
+        // 按 profile 恢复各自的 API Key
+        let storedKeys = credentials?.apiKeys ?? [:]
+        for index in loaded.llmConfig.profiles.indices {
+            let key = loaded.llmConfig.profiles[index].id.uuidString
+            if let stored = storedKeys[key] {
+                loaded.llmConfig.profiles[index].apiKey = stored
+            }
+        }
+
+        // 旧版本的单 Key 迁移到默认配置
+        if let legacyKey = credentials?.apiKey, !legacyKey.isEmpty,
+           loaded.llmConfig.profiles.allSatisfy({ $0.apiKey.isEmpty }),
+           let defaultID = loaded.llmConfig.defaultProfile?.id,
+           let index = loaded.llmConfig.profiles.firstIndex(where: { $0.id == defaultID }) {
+            loaded.llmConfig.profiles[index].apiKey = legacyKey
+        }
+
         settings = loaded
+        persist(loaded)
     }
 
     private func persist(_ settings: AppSettings) {
         var redacted = settings
         redacted.githubToken = ""
-        redacted.llmConfig.apiKey = ""
+        for index in redacted.llmConfig.profiles.indices {
+            redacted.llmConfig.profiles[index].apiKey = ""
+        }
 
         if let data = try? JSONEncoder().encode(redacted) {
             defaults.set(data, forKey: settingsKey)
         }
 
-        CredentialStore.save(.init(
-            githubToken: settings.githubToken,
-            apiKey: settings.llmConfig.apiKey
-        ))
+        var apiKeys: [String: String] = [:]
+        for profile in settings.llmConfig.profiles where !profile.apiKey.isEmpty {
+            apiKeys[profile.id.uuidString] = profile.apiKey
+        }
+        CredentialStore.save(.init(githubToken: settings.githubToken, apiKeys: apiKeys))
     }
 }

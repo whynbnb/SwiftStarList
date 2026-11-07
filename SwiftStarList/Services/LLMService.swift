@@ -6,6 +6,9 @@ actor LLMService {
     func analyzeStream(input: RepoAnalysisInput, settings: AppSettings, onChunk: @escaping (String) -> Void) async throws -> String {
         let s = L.s
         let isZh = AppLanguage.resolve(settings.language) == .zh
+        guard let profile = settings.llmConfig.defaultProfile else {
+            throw NetworkError.invalidConfiguration
+        }
 
         let systemMessage: String
         if isZh {
@@ -63,7 +66,7 @@ actor LLMService {
         """
 
         let request = ChatCompletionRequest(
-            model: settings.llmConfig.model,
+            model: profile.model,
             messages: [
                 ChatMessage(role: "system", content: systemMessage),
                 ChatMessage(role: "user", content: prompt)
@@ -72,8 +75,8 @@ actor LLMService {
             stream: true
         )
 
-        let baseURL = settings.llmConfig.baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !baseURL.isEmpty else { throw NetworkError.invalidURL }
+        let baseURL = profile.baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !baseURL.isEmpty, !profile.model.isEmpty else { throw NetworkError.invalidConfiguration }
         let path = baseURL.hasSuffix("/v1") ? "chat/completions" : "v1/chat/completions"
         guard let url = URL(string: "\(baseURL)/\(path)"), url.scheme != nil else {
             throw NetworkError.invalidURL
@@ -82,12 +85,12 @@ actor LLMService {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !settings.llmConfig.apiKey.isEmpty {
-            urlRequest.setValue("Bearer \(settings.llmConfig.apiKey)", forHTTPHeaderField: "Authorization")
+        if !profile.apiKey.isEmpty {
+            urlRequest.setValue("Bearer \(profile.apiKey)", forHTTPHeaderField: "Authorization")
         }
         urlRequest.httpBody = try JSONEncoder().encode(request)
 
-        let session = network.makeSessionForProxy(settings.llmConfig.proxyConfig)
+        let session = network.makeSessionForProxy(profile.proxyConfig)
         let (bytes, response) = try await session.bytes(for: urlRequest)
 
         guard let httpResponse = response as? HTTPURLResponse else {

@@ -2,6 +2,7 @@ import Foundation
 
 enum NetworkError: LocalizedError {
     case invalidURL
+    case invalidConfiguration
     case unauthorized
     case httpError(Int, String)
     case decodingError(Error)
@@ -10,6 +11,7 @@ enum NetworkError: LocalizedError {
         let s = L.s
         switch self {
         case .invalidURL: return s.invalidURL
+        case .invalidConfiguration: return s.invalidConfiguration
         case .unauthorized: return s.unauthorized
         case .httpError(let code, let msg): return "\(s.httpError) \(code): \(msg)"
         case .decodingError(let e): return "\(s.decodingError): \(e.localizedDescription)"

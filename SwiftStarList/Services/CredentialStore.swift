@@ -7,7 +7,16 @@ import Foundation
 struct CredentialStore {
     struct Credentials: Codable {
         var githubToken: String
-        var apiKey: String
+        /// 旧版本的单 LLM Key，仅用于迁移读取
+        var apiKey: String?
+        /// LLM profile UUID -> API Key
+        var apiKeys: [String: String]?
+
+        init(githubToken: String, apiKey: String? = nil, apiKeys: [String: String]? = nil) {
+            self.githubToken = githubToken
+            self.apiKey = apiKey
+            self.apiKeys = apiKeys
+        }
     }
 
     private static var directoryURL: URL {
