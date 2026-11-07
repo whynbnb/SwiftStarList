@@ -419,7 +419,7 @@ struct RepoDetailView: View {
             .frame(maxWidth: .infinity, minHeight: 200)
         } else if let result = viewModel.analysisResult {
             VStack(alignment: .leading, spacing: 12) {
-                RepoAnalysisCard(result: result, raw: viewModel.analysis ?? "")
+                RepoAnalysisCard(analysis: result, state: .finished, raw: viewModel.analysis ?? "")
                 Button(L.s.reanalyze) {
                     viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
                 }
@@ -427,23 +427,39 @@ struct RepoDetailView: View {
             }
             .id(settingsManager.languageVersion)
         } else if viewModel.isLoadingAnalysis {
-            VStack(spacing: 12) {
-                ProgressView()
-                Text(L.s.analyzing)
-                    .foregroundColor(.secondary)
-                    .id(settingsManager.languageVersion)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                    Text(L.s.analyzing)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                RepoAnalysisCard(
+                    analysis: viewModel.partialAnalysis ?? RepoAnalysis(),
+                    state: .streaming,
+                    raw: nil
+                )
             }
-            .frame(maxWidth: .infinity, minHeight: 200)
-        } else if let analysis = viewModel.analysis, !analysis.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                Label(L.s.analysisRawFallback, systemImage: "exclamationmark.triangle")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                    .id(settingsManager.languageVersion)
-                Markdown(analysis)
-                    .markdownTheme(.transparent)
-                    .tint(.purple)
+            .id(settingsManager.languageVersion)
+        } else if viewModel.analysisFailed,
+                  let partial = viewModel.partialAnalysis,
+                  partial.hasContent {
+            VStack(alignment: .leading, spacing: 12) {
+                if let message = viewModel.analysisFailureMessage, !message.isEmpty {
+                    Label(message, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .lineLimit(2)
+                        .id(settingsManager.languageVersion)
+                }
+                RepoAnalysisCard(analysis: partial, state: .failed, raw: nil)
+                Button(L.s.reanalyze) {
+                    viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
+                }
+                .buttonStyle(.bordered)
             }
+            .id(settingsManager.languageVersion)
         } else {
             VStack(spacing: 16) {
                 Image(systemName: "sparkles")
@@ -701,83 +717,140 @@ struct RepoDetailView: View {
     }
 }
 
+private enum AnalysisCardState {
+    case streaming
+    case finished
+    case failed
+}
+
 private struct RepoAnalysisCard: View {
-    let result: RepoAnalysis
-    let raw: String
+    let analysis: RepoAnalysis
+    let state: AnalysisCardState
+    let raw: String?
     @State private var showRaw = false
+
+    private var isStreaming: Bool { state == .streaming }
+    private var isFailed: Bool { state == .failed }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             summaryView
-            chipSection(L.s.analysisCategories, result.categories)
-            bulletSection(L.s.analysisFeatures, result.coreFeatures)
-            chipSection(L.s.analysisTechStack, result.techStack)
-            bulletSection(L.s.analysisUseCases, result.useCases)
+            chipSection(L.s.analysisCategories, analysis.categories)
+            bulletSection(L.s.analysisFeatures, analysis.coreFeatures)
+            chipSection(L.s.analysisTechStack, analysis.techStack)
+            bulletSection(L.s.analysisUseCases, analysis.useCases)
             activitySection
             audienceSection
             prosConsSection
-            bulletSection(L.s.analysisSimilar, result.similarProjects)
+            bulletSection(L.s.analysisSimilar, analysis.similarProjects)
             recommendationSection
             rawSection
         }
     }
 
+    @ViewBuilder
     private var summaryView: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "sparkles")
-                .foregroundColor(.purple)
-            Text(result.summary)
-                .font(.system(size: 14, weight: .semibold))
-                .fixedSize(horizontal: false, vertical: true)
-                .textSelection(.enabled)
+        if let summary = analysis.summary, !summary.isEmpty {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.purple)
+                Text(summary)
+                    .font(.system(size: 14, weight: .semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.purple.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                SkeletonBar()
+                SkeletonBar(width: 240)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.purple.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if isFailed {
+            SectionFailure(message: L.s.analysisFieldFailed)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.purple.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     @ViewBuilder
     private func chipSection(_ title: String, _ values: [String]?) -> some View {
-        if let values, !values.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                sectionTitle(title)
-                FlowLayout(spacing: 6) {
-                    ForEach(values, id: \.self) { value in
-                        Text(value)
-                            .font(.system(size: 11))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.accentColor.opacity(0.1))
-                            .cornerRadius(5)
+        if let values {
+            if !values.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    sectionTitle(title)
+                    FlowLayout(spacing: 6) {
+                        ForEach(values, id: \.self) { value in
+                            Text(value)
+                                .font(.system(size: 11))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.accentColor.opacity(0.1))
+                                .cornerRadius(5)
+                        }
                     }
                 }
+            }
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                HStack(spacing: 6) {
+                    SkeletonChip(width: 48)
+                    SkeletonChip(width: 72)
+                    SkeletonChip(width: 56)
+                }
+            }
+        } else if isFailed {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                SectionFailure(message: L.s.analysisFieldFailed)
             }
         }
     }
 
     @ViewBuilder
     private func bulletSection(_ title: String, _ values: [String]?) -> some View {
-        if let values, !values.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                sectionTitle(title)
-                ForEach(Array(values.enumerated()), id: \.offset) { _, value in
-                    HStack(alignment: .top, spacing: 6) {
-                        Text("•")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                        Text(value)
-                            .font(.system(size: 12))
-                            .fixedSize(horizontal: false, vertical: true)
+        if let values {
+            if !values.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    sectionTitle(title)
+                    ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("•")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            Text(value)
+                                .font(.system(size: 12))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
+            }
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                SkeletonBar()
+                SkeletonBar(width: 230)
+            }
+        } else if isFailed {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                SectionFailure(message: L.s.analysisFieldFailed)
             }
         }
     }
 
     @ViewBuilder
     private var activitySection: some View {
-        if let level = result.activityLevel, !level.isEmpty {
+        if let level = analysis.activityLevel, !level.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 sectionTitle(L.s.analysisActivity)
                 HStack(alignment: .top, spacing: 8) {
@@ -788,60 +861,102 @@ private struct RepoAnalysisCard: View {
                         .background(activityColor(level).opacity(0.15))
                         .foregroundColor(activityColor(level))
                         .cornerRadius(5)
-                    if let reason = result.activityReason, !reason.isEmpty {
+
+                    if let reason = analysis.activityReason, !reason.isEmpty {
                         Text(reason)
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
+                    } else if isStreaming {
+                        SkeletonBar()
+                    } else if isFailed {
+                        SectionFailure(message: L.s.analysisFieldFailed)
                     }
                 }
+            }
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisActivity)
+                HStack(spacing: 8) {
+                    SkeletonChip(width: 60)
+                    SkeletonBar()
+                }
+            }
+        } else if isFailed {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisActivity)
+                SectionFailure(message: L.s.analysisFieldFailed)
             }
         }
     }
 
     @ViewBuilder
     private var audienceSection: some View {
-        if let audience = result.audience, !audience.isEmpty {
+        if let audience = analysis.audience, !audience.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 sectionTitle(L.s.analysisAudience)
                 Text(audience)
                     .font(.system(size: 12))
                     .fixedSize(horizontal: false, vertical: true)
             }
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisAudience)
+                SkeletonBar()
+            }
+        } else if isFailed {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisAudience)
+                SectionFailure(message: L.s.analysisFieldFailed)
+            }
         }
     }
 
     @ViewBuilder
     private var prosConsSection: some View {
-        let pros = result.pros ?? []
-        let cons = result.cons ?? []
-        if !pros.isEmpty || !cons.isEmpty {
+        if analysis.pros != nil || analysis.cons != nil {
             HStack(alignment: .top, spacing: 20) {
-                bulletColumn(L.s.analysisPros, pros, color: .green)
-                bulletColumn(L.s.analysisCons, cons, color: .orange)
+                bulletColumn(L.s.analysisPros, analysis.pros, color: .green)
+                bulletColumn(L.s.analysisCons, analysis.cons, color: .orange)
+            }
+        } else if isStreaming || isFailed {
+            HStack(alignment: .top, spacing: 20) {
+                bulletColumn(L.s.analysisPros, nil, color: .green)
+                bulletColumn(L.s.analysisCons, nil, color: .orange)
             }
         }
     }
 
-    private func bulletColumn(_ title: String, _ values: [String], color: Color) -> some View {
+    private func bulletColumn(_ title: String, _ values: [String]?, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionTitle(title)
-            if values.isEmpty {
+            if let values {
+                if values.isEmpty {
+                    Text("—")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                } else {
+                    ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                        HStack(alignment: .top, spacing: 6) {
+                            Circle()
+                                .fill(color)
+                                .frame(width: 4, height: 4)
+                                .padding(.top, 6)
+                            Text(value)
+                                .font(.system(size: 12))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            } else if isStreaming {
+                SkeletonBar()
+                SkeletonBar(width: 120)
+            } else if isFailed {
+                SectionFailure(message: L.s.analysisFieldFailed)
+            } else {
                 Text("—")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
-            } else {
-                ForEach(Array(values.enumerated()), id: \.offset) { _, value in
-                    HStack(alignment: .top, spacing: 6) {
-                        Circle()
-                            .fill(color)
-                            .frame(width: 4, height: 4)
-                            .padding(.top, 6)
-                        Text(value)
-                            .font(.system(size: 12))
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -849,7 +964,7 @@ private struct RepoAnalysisCard: View {
 
     @ViewBuilder
     private var recommendationSection: some View {
-        if let recommendation = result.recommendation, !recommendation.isEmpty {
+        if let recommendation = analysis.recommendation, !recommendation.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 sectionTitle(L.s.analysisRecommendation)
                 Text(recommendation)
@@ -861,12 +976,23 @@ private struct RepoAnalysisCard: View {
                     .background(Color.purple.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
+        } else if isStreaming {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisRecommendation)
+                SkeletonBar()
+                SkeletonBar(width: 260)
+            }
+        } else if isFailed {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisRecommendation)
+                SectionFailure(message: L.s.analysisFieldFailed)
+            }
         }
     }
 
     @ViewBuilder
     private var rawSection: some View {
-        if !raw.isEmpty {
+        if state == .finished, let raw, !raw.isEmpty {
             DisclosureGroup(isExpanded: $showRaw) {
                 Markdown(raw)
                     .markdownTheme(.transparent)
@@ -903,6 +1029,53 @@ private struct RepoAnalysisCard: View {
         case "low": return .gray
         default: return .secondary
         }
+    }
+}
+
+private struct SectionFailure: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+            Text(message)
+                .font(.system(size: 11))
+        }
+        .foregroundColor(.orange)
+    }
+}
+
+private struct SkeletonBar: View {
+    var width: CGFloat? = nil
+    @State private var pulsing = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 4)
+            .fill(Color.secondary.opacity(pulsing ? 0.22 : 0.10))
+            .frame(maxWidth: width ?? .infinity)
+            .frame(height: 10)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                    pulsing = true
+                }
+            }
+    }
+}
+
+private struct SkeletonChip: View {
+    let width: CGFloat
+    @State private var pulsing = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 5)
+            .fill(Color.secondary.opacity(pulsing ? 0.22 : 0.10))
+            .frame(width: width, height: 18)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                    pulsing = true
+                }
+            }
     }
 }
 

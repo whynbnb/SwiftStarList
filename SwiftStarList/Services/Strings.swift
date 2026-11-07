@@ -51,7 +51,8 @@ struct Strings {
     let analysisSimilar: String
     let analysisRecommendation: String
     let rawOutput: String
-    let analysisRawFallback: String
+    let analysisFieldFailed: String
+    let analysisParseFailed: String
     let activityHigh: String
     let activityMedium: String
     let activityLow: String
@@ -169,7 +170,8 @@ struct Strings {
         analysisSimilar: "相似项目",
         analysisRecommendation: "建议",
         rawOutput: "原始输出",
-        analysisRawFallback: "未能解析为结构化结果，以下为原始输出",
+        analysisFieldFailed: "生成失败",
+        analysisParseFailed: "AI 返回内容不完整",
         activityHigh: "活跃",
         activityMedium: "一般",
         activityLow: "不活跃",
@@ -288,7 +290,8 @@ struct Strings {
         analysisSimilar: "Similar Projects",
         analysisRecommendation: "Recommendation",
         rawOutput: "Raw Output",
-        analysisRawFallback: "Could not parse structured result; showing raw output",
+        analysisFieldFailed: "Generation failed",
+        analysisParseFailed: "AI response was incomplete",
         activityHigh: "Active",
         activityMedium: "Moderate",
         activityLow: "Inactive",

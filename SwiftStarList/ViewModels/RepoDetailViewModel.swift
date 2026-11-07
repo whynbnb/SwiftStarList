@@ -6,6 +6,9 @@ final class RepoDetailViewModel: ObservableObject {
     @Published var readmeFailed = false
     @Published var analysis: String?
     @Published var analysisResult: RepoAnalysis?
+    @Published var partialAnalysis: RepoAnalysis?
+    @Published var analysisFailed = false
+    @Published var analysisFailureMessage: String?
     @Published var isLoadingREADME = false
     @Published var isLoadingAnalysis = false
     @Published var errorMessage: String?
@@ -38,6 +41,9 @@ final class RepoDetailViewModel: ObservableObject {
         readmeFailed = false
         analysis = nil
         analysisResult = nil
+        partialAnalysis = nil
+        analysisFailed = false
+        analysisFailureMessage = nil
         errorMessage = nil
         activityErrorMessage = nil
         isLoadingREADME = false
@@ -86,6 +92,9 @@ final class RepoDetailViewModel: ObservableObject {
         analysisTask?.cancel()
         errorMessage = nil
         analysisResult = nil
+        partialAnalysis = nil
+        analysisFailed = false
+        analysisFailureMessage = nil
         analysis = ""
         isLoadingAnalysis = true
         analysisTask = Task { [weak self] in
@@ -143,16 +152,39 @@ final class RepoDetailViewModel: ObservableObject {
                     Task { @MainActor in
                         guard let self, generation == self.analysisGeneration else { return }
                         self.analysis = partial
+                        self.partialAnalysis = RepoAnalysis.partial(from: partial)
                     }
                 }
             )
             guard generation == analysisGeneration, !Task.isCancelled else { return }
             analysis = result
-            analysisResult = RepoAnalysis.parse(from: result)
+            let partial = RepoAnalysis.partial(from: result)
+
+            if let parsed = RepoAnalysis.parse(from: result) {
+                analysisResult = parsed
+                partialAnalysis = nil
+                analysisFailed = false
+                analysisFailureMessage = nil
+            } else if partial.hasContent {
+                // 已经渲染出一部分结构化内容：保留当前状态，只把失败信息传给缺失的区块
+                analysisResult = nil
+                partialAnalysis = partial
+                analysisFailed = true
+                analysisFailureMessage = L.s.analysisParseFailed
+            } else {
+                partialAnalysis = nil
+                errorMessage = "\(L.s.analyzeFailed): \(L.s.analysisParseFailed)"
+            }
         } catch is CancellationError {
             // 用户切换了仓库，丢弃结果
         } catch {
-            if generation == analysisGeneration, !Task.isCancelled, (analysis?.isEmpty ?? true) {
+            guard generation == analysisGeneration, !Task.isCancelled else { return }
+            let partial = RepoAnalysis.partial(from: analysis ?? "")
+            if partial.hasContent {
+                partialAnalysis = partial
+                analysisFailed = true
+                analysisFailureMessage = error.localizedDescription
+            } else {
                 errorMessage = "\(L.s.analyzeFailed): \(error.localizedDescription)"
             }
         }

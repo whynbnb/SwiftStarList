@@ -14,7 +14,7 @@ actor LLMService {
         if isZh {
             systemMessage = """
             你是一个专业的开源项目分析助手。请只输出一个合法的 JSON 对象，不要输出 Markdown 代码块、前后说明或其他文字。所有文本使用中文。
-            JSON 结构（所有字段都必须存在；没有内容的数组输出 []）：
+            JSON 结构（所有字段都必须存在；没有内容的数组输出 []；请严格按下列字段顺序输出，便于客户端逐步渲染）：
             {
               "summary": "一句话概括项目",
               "categories": ["分类"],
@@ -33,7 +33,7 @@ actor LLMService {
         } else {
             systemMessage = """
             You are a professional open-source project analyst. Output exactly one valid JSON object, with no Markdown code fences, explanations, or other text. All text in English.
-            JSON schema (all fields must be present; use [] for empty arrays):
+            JSON schema (all fields must be present; use [] for empty arrays; output fields in exactly this order so the client can render progressively):
             {
               "summary": "one sentence summary",
               "categories": ["category"],
