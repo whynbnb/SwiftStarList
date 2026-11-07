@@ -98,6 +98,19 @@ struct RepoDetailView: View {
                 }
                 .id(settingsManager.languageVersion)
 
+                Spacer(minLength: 8)
+
+                if viewModel.isLoadingAnalysis {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(L.s.analyzing)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .id(settingsManager.languageVersion)
+                }
+
                 TabButton(title: L.s.aiTab, icon: "sparkles", isSelected: selectedTab == .ai, selectedColor: .purple) {
                     selectedTab = .ai
                     if settingsManager.settings.autoAnalyze && viewModel.analysis == nil {
@@ -439,24 +452,9 @@ struct RepoDetailView: View {
                                 .markdownTheme(.transparent)
                                 .tint(.purple)
                         }
-                        HStack(spacing: 6) {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                            Text(L.s.analyzing)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .id(settingsManager.languageVersion)
-                        }
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 6) {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                            Text(L.s.analyzing)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
                         RepoAnalysisCard(
                             analysis: viewModel.partialAnalysis ?? RepoAnalysis(),
                             state: .streaming,
