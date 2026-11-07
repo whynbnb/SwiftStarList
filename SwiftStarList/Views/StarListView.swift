@@ -201,37 +201,76 @@ struct SearchBar: View {
 
 struct StarRowView: View {
     let repo: StarredRepo
+    @State private var hoverTask: Task<Void, Never>?
+    @State private var hideTask: Task<Void, Never>?
+    @State private var showDetail = false
 
     var body: some View {
+        rowContent
+            .onHover { hovering in
+                hoverTask?.cancel()
+                hideTask?.cancel()
+                if hovering {
+                    hoverTask = Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(600))
+                        guard !Task.isCancelled else { return }
+                        showDetail = true
+                    }
+                } else {
+                    // 留一点时间，让指针可以移入浮层查看/选择文字
+                    hideTask = Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(250))
+                        guard !Task.isCancelled else { return }
+                        showDetail = false
+                    }
+                }
+            }
+            .onDisappear {
+                hoverTask?.cancel()
+                hideTask?.cancel()
+                showDetail = false
+            }
+            .popover(isPresented: $showDetail, arrowEdge: .trailing) {
+                StarRowDetailView(repo: repo)
+                    .onHover { inside in
+                        if inside {
+                            hideTask?.cancel()
+                        } else {
+                            showDetail = false
+                        }
+                    }
+            }
+    }
+
+    private var rowContent: some View {
         HStack(alignment: .top, spacing: 10) {
             CachedAvatarView(urlString: repo.owner.avatarUrl)
                 .frame(width: 32, height: 32)
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(repo.fullName)
                     .font(.system(size: 13, weight: .medium))
-                Group {
-                    if let desc = repo.description {
-                        Text(desc)
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    } else {
-                        Text(" ")
-                            .font(.system(size: 11))
-                            .lineLimit(1)
-                    }
-                }
-                .frame(height: 28, alignment: .topLeading)
+                    .lineLimit(1)
+
+                // 描述固定只显示一行，无描述时也占位，保证各行高度一致
+                Text(repo.description ?? " ")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .frame(height: 14, alignment: .leading)
+
                 HStack(spacing: 8) {
                     if let lang = repo.language {
                         LanguageTag(language: lang)
                     }
+                    Spacer(minLength: 8)
                     Label("\(repo.stargazersCount)", systemImage: "star.fill")
                         .font(.system(size: 10))
                         .foregroundColor(.orange)
                 }
+                .frame(height: 16, alignment: .leading)
+
                 HStack(spacing: 12) {
                     if let starredAt = repo.starredAt {
                         Label(starredAt.prefix(10), systemImage: "star")
@@ -242,10 +281,72 @@ struct StarRowView: View {
                 }
                 .font(.system(size: 9))
                 .foregroundStyle(.tertiary)
+                .frame(height: 12, alignment: .leading)
             }
         }
-        .padding(.vertical, 2)
-        .frame(height: 78)
+        .padding(.vertical, 6)
+    }
+}
+
+private struct StarRowDetailView: View {
+    let repo: StarredRepo
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
+                CachedAvatarView(urlString: repo.owner.avatarUrl)
+                    .frame(width: 28, height: 28)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(repo.fullName)
+                        .font(.system(size: 13, weight: .semibold))
+
+                    if let desc = repo.description, !desc.isEmpty {
+                        Text(desc)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            HStack(spacing: 10) {
+                if let lang = repo.language {
+                    LanguageTag(language: lang)
+                }
+                Spacer(minLength: 8)
+                Label("\(repo.stargazersCount)", systemImage: "star.fill")
+                    .font(.system(size: 11))
+                    .foregroundColor(.orange)
+            }
+
+            if repo.starredAt != nil || repo.pushedAt != nil {
+                HStack(spacing: 12) {
+                    if let starredAt = repo.starredAt {
+                        Label(starredAt.prefix(10), systemImage: "star")
+                    }
+                    if let pushedAt = repo.pushedAt {
+                        Label(pushedAt.prefix(10), systemImage: "clock")
+                    }
+                }
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
+            }
+
+            if !repo.topics.isEmpty {
+                FlowLayout(spacing: 6) {
+                    ForEach(repo.topics, id: \.self) { topic in
+                        Text("#\(topic)")
+                            .font(.system(size: 10))
+                            .foregroundColor(.link)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(width: 320, alignment: .leading)
+        .textSelection(.enabled)
     }
 }
 
