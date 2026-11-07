@@ -131,6 +131,10 @@ struct SettingsView: View {
 
             Section(L.s.analysisSection) {
                 Toggle(L.s.autoAnalyze, isOn: $settingsManager.settings.autoAnalyze)
+                Toggle(L.s.simpleMode, isOn: simpleModeBinding)
+                Text(L.s.simpleModeHint)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             Section(L.s.customPrompt) {
@@ -187,6 +191,13 @@ struct SettingsView: View {
         Binding(
             get: { settingsManager.settings.llmConfig.customPrompt ?? "" },
             set: { settingsManager.settings.llmConfig.customPrompt = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    private var simpleModeBinding: Binding<Bool> {
+        Binding(
+            get: { settingsManager.settings.llmConfig.simpleMode ?? false },
+            set: { settingsManager.settings.llmConfig.simpleMode = $0 }
         )
     }
 

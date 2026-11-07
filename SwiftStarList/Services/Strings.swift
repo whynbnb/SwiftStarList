@@ -77,6 +77,8 @@ struct Strings {
     let defaultSuffix: String
     let unnamedProfile: String
     let analysisSection: String
+    let simpleMode: String
+    let simpleModeHint: String
     let proxyMode: String
     let host: String
     let port: String
@@ -196,6 +198,8 @@ struct Strings {
         defaultSuffix: "（默认）",
         unnamedProfile: "未命名",
         analysisSection: "分析",
+        simpleMode: "简单模式",
+        simpleModeHint: "使用原来的 Markdown 输出，不生成结构化卡片。",
         proxyMode: "代理模式",
         host: "主机地址",
         port: "端口",
@@ -316,6 +320,8 @@ struct Strings {
         defaultSuffix: " (Default)",
         unnamedProfile: "Unnamed",
         analysisSection: "Analysis",
+        simpleMode: "Simple Mode",
+        simpleModeHint: "Use the original Markdown output instead of the structured card.",
         proxyMode: "Proxy Mode",
         host: "Host",
         port: "Port",

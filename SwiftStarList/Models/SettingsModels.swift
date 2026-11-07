@@ -143,6 +143,8 @@ struct LLMConfig: Codable {
     var profiles: [LLMProfile]
     var defaultProfileID: UUID?
     var customPrompt: String?
+    /// 使用原来的 Markdown 输出，不生成结构化卡片
+    var simpleMode: Bool?
 
     var defaultProfile: LLMProfile? {
         if let defaultProfileID,
@@ -160,19 +162,26 @@ struct LLMConfig: Codable {
             model: "gpt-4o-mini",
             proxyConfig: .default
         )
-        return LLMConfig(profiles: [profile], defaultProfileID: profile.id, customPrompt: nil)
+        return LLMConfig(
+            profiles: [profile],
+            defaultProfileID: profile.id,
+            customPrompt: nil,
+            simpleMode: false
+        )
     }()
 
-    init(profiles: [LLMProfile], defaultProfileID: UUID?, customPrompt: String?) {
+    init(profiles: [LLMProfile], defaultProfileID: UUID?, customPrompt: String?, simpleMode: Bool?) {
         self.profiles = profiles
         self.defaultProfileID = defaultProfileID
         self.customPrompt = customPrompt
+        self.simpleMode = simpleMode
     }
 
     enum CodingKeys: String, CodingKey {
         case profiles
         case defaultProfileID
         case customPrompt
+        case simpleMode
     }
 
     private enum LegacyCodingKeys: String, CodingKey {
@@ -186,6 +195,7 @@ struct LLMConfig: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         customPrompt = try container.decodeIfPresent(String.self, forKey: .customPrompt)
+        simpleMode = try container.decodeIfPresent(Bool.self, forKey: .simpleMode)
 
         if let decodedProfiles = try container.decodeIfPresent([LLMProfile].self, forKey: .profiles),
            !decodedProfiles.isEmpty {

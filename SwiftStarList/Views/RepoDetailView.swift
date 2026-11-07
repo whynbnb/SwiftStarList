@@ -11,6 +11,10 @@ struct RepoDetailView: View {
         case readme, activity, info, issues, ai
     }
 
+    private var isSimpleMode: Bool {
+        settingsManager.settings.llmConfig.simpleMode == true
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerSection
@@ -427,19 +431,39 @@ struct RepoDetailView: View {
             }
             .id(settingsManager.languageVersion)
         } else if viewModel.isLoadingAnalysis {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 6) {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                    Text(L.s.analyzing)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            Group {
+                if isSimpleMode {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let analysis = viewModel.analysis, !analysis.isEmpty {
+                            Markdown(analysis)
+                                .markdownTheme(.transparent)
+                                .tint(.purple)
+                        }
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text(L.s.analyzing)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .id(settingsManager.languageVersion)
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text(L.s.analyzing)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        RepoAnalysisCard(
+                            analysis: viewModel.partialAnalysis ?? RepoAnalysis(),
+                            state: .streaming,
+                            raw: nil
+                        )
+                    }
                 }
-                RepoAnalysisCard(
-                    analysis: viewModel.partialAnalysis ?? RepoAnalysis(),
-                    state: .streaming,
-                    raw: nil
-                )
             }
             .id(settingsManager.languageVersion)
         } else if viewModel.analysisFailed,
@@ -454,6 +478,24 @@ struct RepoDetailView: View {
                         .id(settingsManager.languageVersion)
                 }
                 RepoAnalysisCard(analysis: partial, state: .failed, raw: nil)
+                Button(L.s.reanalyze) {
+                    viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
+                }
+                .buttonStyle(.bordered)
+            }
+            .id(settingsManager.languageVersion)
+        } else if isSimpleMode, let analysis = viewModel.analysis, !analysis.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                if let message = viewModel.analysisFailureMessage, !message.isEmpty {
+                    Label(message, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .lineLimit(2)
+                        .id(settingsManager.languageVersion)
+                }
+                Markdown(analysis)
+                    .markdownTheme(.transparent)
+                    .tint(.purple)
                 Button(L.s.reanalyze) {
                     viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
                 }

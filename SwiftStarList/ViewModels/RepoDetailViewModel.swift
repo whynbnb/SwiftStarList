@@ -103,6 +103,8 @@ final class RepoDetailViewModel: ObservableObject {
     }
 
     private func analyzeRepo(repo: StarredRepo, settings: AppSettings, generation: Int) async {
+        let simpleMode = settings.llmConfig.simpleMode == true
+
         if readmeContent == nil {
             await fetchREADME(repo: repo, settings: settings)
         }
@@ -152,12 +154,23 @@ final class RepoDetailViewModel: ObservableObject {
                     Task { @MainActor in
                         guard let self, generation == self.analysisGeneration else { return }
                         self.analysis = partial
-                        self.partialAnalysis = RepoAnalysis.partial(from: partial)
+                        if !simpleMode {
+                            self.partialAnalysis = RepoAnalysis.partial(from: partial)
+                        }
                     }
                 }
             )
             guard generation == analysisGeneration, !Task.isCancelled else { return }
             analysis = result
+
+            if simpleMode {
+                analysisResult = nil
+                partialAnalysis = nil
+                analysisFailed = false
+                analysisFailureMessage = nil
+                return
+            }
+
             let partial = RepoAnalysis.partial(from: result)
 
             if let parsed = RepoAnalysis.parse(from: result) {
@@ -179,6 +192,17 @@ final class RepoDetailViewModel: ObservableObject {
             // 用户切换了仓库，丢弃结果
         } catch {
             guard generation == analysisGeneration, !Task.isCancelled else { return }
+
+            if simpleMode {
+                if (analysis ?? "").isEmpty {
+                    errorMessage = "\(L.s.analyzeFailed): \(error.localizedDescription)"
+                } else {
+                    analysisFailed = true
+                    analysisFailureMessage = error.localizedDescription
+                }
+                return
+            }
+
             let partial = RepoAnalysis.partial(from: analysis ?? "")
             if partial.hasContent {
                 partialAnalysis = partial

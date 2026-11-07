@@ -10,8 +10,14 @@ actor LLMService {
             throw NetworkError.invalidConfiguration
         }
 
+        let simpleMode = settings.llmConfig.simpleMode == true
         let systemMessage: String
-        if isZh {
+
+        if simpleMode {
+            systemMessage = isZh
+                ? "你是一个专业的 GitHub 仓库分析助手，请用中文简洁地分析仓库，直接输出 Markdown，不要输出 JSON。"
+                : "You are a professional GitHub repository analysis assistant. Provide a concise analysis in English as Markdown, not JSON."
+        } else if isZh {
             systemMessage = """
             你是一个专业的开源项目分析助手。请只输出一个合法的 JSON 对象，不要输出 Markdown 代码块、前后说明或其他文字。所有文本使用中文。
             JSON 结构（所有字段都必须存在；没有内容的数组输出 []；请严格按下列字段顺序输出，便于客户端逐步渲染）：
@@ -57,12 +63,35 @@ actor LLMService {
             context += "\n\n" + (isZh ? "## 额外要求（优先遵守）\n" : "## Additional Requirements (follow these)\n") + extra
         }
 
+        let outputInstruction: String
+        if simpleMode {
+            outputInstruction = isZh
+                ? """
+                请从以下方面分析该仓库，使用 Markdown 输出：
+                1. 项目简介（一句话概括）
+                2. 核心功能
+                3. 技术栈
+                4. 适用场景
+                5. 活跃度评估
+                """
+                : """
+                Analyze the repository from these aspects and output Markdown:
+                1. Brief summary (one sentence)
+                2. Core features
+                3. Tech stack
+                4. Use cases
+                5. Activity assessment
+                """
+        } else {
+            outputInstruction = isZh
+                ? "请根据以上信息分析该仓库，并严格按要求的 JSON 结构输出。"
+                : "Analyze this repository using the information above and output strictly in the required JSON schema."
+        }
+
         let prompt = """
         \(context)
 
-        \(isZh
-            ? "请根据以上信息分析该仓库，并严格按要求的 JSON 结构输出。"
-            : "Analyze this repository using the information above and output strictly in the required JSON schema.")
+        \(outputInstruction)
         """
 
         let request = ChatCompletionRequest(
