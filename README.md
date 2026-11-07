@@ -1,28 +1,50 @@
+<p align="center">
+  <img src="docs/app-icon.png" width="128" alt="SwiftStarList app icon">
+</p>
+
 # SwiftStarList
 
-由 [OpenCode](https://opencode.ai) / [GLM-5.1](https://zhipuai.cn) Vibe Coding 而成
+English | [简体中文](README.zh-CN.md)
 
-一款 macOS 原生 GitHub Star 管理工具，支持 AI 智能分析。
+> Vibe-coded with DeepSeek V4.1 Flash / OpenCode
 
-## 功能
+A native macOS app for managing GitHub stars, with AI-powered repository analysis.
 
-- 浏览所有 GitHub Star 仓库，支持按语言/标签/描述搜索
-- 查看仓库 README（Markdown 渲染）
-- AI 分析仓库摘要与技术栈（OpenAI 兼容 API）
-- 支持代理配置（HTTP/SOCKS5/系统代理）
-- 仓库头像与数据本地缓存
+![SwiftStarList](docs/overview-en.png)
 
-## AI 分析
+## Features
 
-![](docs/ai分析.png)
+- Browse all of your GitHub starred repositories
+- Search by name, language, topic, or description
+- Sort and group by starred date, language, first letter, star count, and more
+- Read repository READMEs with native Markdown rendering
+- AI analysis through OpenAI-compatible APIs
+  - Multiple custom LLM profiles with a selectable default
+  - Structured analysis cards rendered progressively while streaming
+  - Optional simple mode with plain Markdown output
+  - Additional custom prompt for focus areas or style
+- Proxy support: system, HTTP, and SOCKS5
+- Local caching for repository data and avatars
 
-## 使用前设置
+## AI Analysis
 
-首次使用前，请先在设置中配置 GitHub Token 和 LLM 信息：
+![AI analysis](docs/analysis-en.png)
 
-![](docs/设置.png)
+## Setup
 
-## 构建
+Configure your GitHub Token and at least one LLM profile before first use:
+
+![Settings](docs/settings-en.png)
+
+The GitHub Token is required to read your starred repositories. The LLM configuration is only needed for AI analysis. Credentials are stored locally at:
+
+```
+~/Library/Containers/com.swiftstarlist.app/Data/Library/Application Support/SwiftStarList/credentials.json
+```
+
+The file is created with `0600` permissions.
+
+## Build
 
 ```bash
 # SPM
@@ -31,12 +53,22 @@ swift run
 
 # Xcode
 xcodebuild -scheme SwiftStarList build
-# 或双击 SwiftStarList.xcodeproj
+# or open SwiftStarList.xcodeproj
 ```
 
-## 依赖
+Requires macOS 14 or later.
 
-- [MarkdownUI](https://github.com/gonzalezreal/swift-markdown-ui) - Markdown 渲染
+## Screenshots
+
+Screenshots in `docs/` are generated from the app's SwiftUI components:
+
+```bash
+./scripts/render-screenshots.sh
+```
+
+## Dependencies
+
+- [MarkdownUI](https://github.com/gonzalezreal/swift-markdown-ui) - Markdown rendering
 
 ## License
 

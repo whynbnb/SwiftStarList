@@ -1,20 +1,35 @@
 import SwiftUI
 
+enum SettingsTab: Hashable {
+    case general
+    case github
+    case llm
+}
+
 struct SettingsView: View {
     @ObservedObject var settingsManager: SettingsManager
     @State private var showToken = false
     @State private var editingProfileID: UUID?
+    @State private var selectedTab: SettingsTab
+
+    init(settingsManager: SettingsManager, initialTab: SettingsTab = .general) {
+        _settingsManager = ObservedObject(wrappedValue: settingsManager)
+        _selectedTab = State(initialValue: initialTab)
+    }
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             generalTab
                 .tabItem { Label(L.s.generalTab, systemImage: "gearshape") }
+                .tag(SettingsTab.general)
 
             githubTab
                 .tabItem { Label(L.s.githubSection, systemImage: "network") }
+                .tag(SettingsTab.github)
 
             llmTab
                 .tabItem { Label("LLM", systemImage: "sparkles") }
+                .tag(SettingsTab.llm)
         }
         .id(settingsManager.languageVersion)
         .frame(width: 480, height: 460)
@@ -74,7 +89,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
     }
 
-    private var llmTab: some View {
+    var llmTab: some View {
         Form {
             Section(L.s.llmSection) {
                 Picker(L.s.llmProfile, selection: editingProfileBinding) {

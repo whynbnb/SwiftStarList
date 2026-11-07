@@ -757,13 +757,13 @@ struct RepoDetailView: View {
     }
 }
 
-private enum AnalysisCardState {
+enum AnalysisCardState {
     case streaming
     case finished
     case failed
 }
 
-private struct RepoAnalysisCard: View {
+struct RepoAnalysisCard: View {
     let analysis: RepoAnalysis
     let state: AnalysisCardState
     let raw: String?
