@@ -24,9 +24,11 @@ struct Strings {
     let scopeDescription: String
     let starListTitle: String
     let cache: String
+    let showingCache: String
     let loading: String
     let loadFailed: String
     let retry: String
+    let refresh: String
     let searchRepo: String
     let selectRepo: String
     let openInGithub: String
@@ -118,9 +120,11 @@ struct Strings {
         scopeDescription: "描述",
         starListTitle: "Star 列表",
         cache: "缓存",
+        showingCache: "正在显示本地缓存",
         loading: "加载中...",
         loadFailed: "加载失败",
         retry: "重试",
+        refresh: "刷新",
         searchRepo: "搜索仓库...",
         selectRepo: "选择一个仓库查看详情",
         openInGithub: "在GitHub中打开",
@@ -213,9 +217,11 @@ struct Strings {
         scopeDescription: "Description",
         starListTitle: "Star List",
         cache: "Cache",
+        showingCache: "Showing cached data",
         loading: "Loading...",
         loadFailed: "Load Failed",
         retry: "Retry",
+        refresh: "Refresh",
         searchRepo: "Search repos...",
         selectRepo: "Select a repo to view details",
         openInGithub: "Open in GitHub",

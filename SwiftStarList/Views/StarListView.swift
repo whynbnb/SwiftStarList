@@ -24,6 +24,10 @@ struct StarListView: View {
                 filterBar
                     .id(settingsManager.languageVersion)
 
+                if viewModel.isFromCache {
+                    cacheBanner
+                }
+
                 if viewModel.isLoading && viewModel.repos.isEmpty {
                     Spacer()
                     ProgressView(L.s.loading)
@@ -48,22 +52,13 @@ struct StarListView: View {
             .navigationSplitViewColumnWidth(min: 260, ideal: 300)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: 8) {
-                        if viewModel.isFromCache {
-                            Text(L.s.cache)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-                        Button(action: {
-                            Task { await viewModel.fetchAll(settings: settingsManager.settings) }
-                        }) {
-                            Image(systemName: "arrow.clockwise")
-                        }
+                    Button(action: {
+                        Task { await viewModel.fetchAll(settings: settingsManager.settings) }
+                    }) {
+                        Image(systemName: "arrow.clockwise")
                     }
+                    .help(L.s.refresh)
+                    .disabled(viewModel.isLoading)
                 }
             }
             .task {
@@ -126,15 +121,35 @@ struct StarListView: View {
 
             Spacer()
 
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .controlSize(.mini)
+                }
                 Text("\(viewModel.filteredRepos.count)")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                                QuickTipView()
+                QuickTipView()
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
+    }
+
+    private var cacheBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "internaldrive")
+            Text(L.s.showingCache)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 11))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+        .overlay(alignment: .bottom) { Divider() }
     }
 
     private var repoList: some View {
