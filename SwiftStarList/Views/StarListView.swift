@@ -445,15 +445,20 @@ struct QuickTipView: View {
                 isHovered = hovering
             }
             .popover(isPresented: $isHovered, arrowEdge: .bottom) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L.s.hintTitle).font(.caption.bold())
-                    Text(L.s.hintTopic)
-                        .font(.caption)
-                    Text(L.s.hintPrivate)
-                        .font(.caption)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L.s.hintTitle)
+                        .font(.caption.bold())
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L.s.hintTopic)
+                        Text(L.s.hintPrivate)
+                    }
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(width: 240, alignment: .leading)
-                .padding(8)
+                .frame(width: 280, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
             }
     }
 }
