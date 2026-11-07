@@ -8,15 +8,7 @@ actor LLMService {
         let prompt: String
         let systemMessage: String
 
-        let isZh: Bool
-        switch settings.language {
-        case .system:
-            isZh = Locale.current.language.languageCode?.identifier == "zh"
-        case .zh:
-            isZh = true
-        case .en:
-            isZh = false
-        }
+        let isZh = AppLanguage.resolve(settings.language) == .zh
 
         if isZh {
             prompt = """

@@ -21,6 +21,29 @@ enum AppLanguage: String, CaseIterable, Codable {
         case .en: return Locale(identifier: "en_US")
         }
     }
+
+    /// 实际生效的语言：显式选择优先，`.system` 时跟随系统首选语言。
+    static var resolved: AppLanguage {
+        resolve(SettingsManager.shared.settings.language)
+    }
+
+    static func resolve(_ selected: AppLanguage) -> AppLanguage {
+        selected == .system ? systemLanguage : selected
+    }
+
+    /// 系统首选语言（尊重 macOS 的「按 App 设置语言」）。
+    static var systemLanguage: AppLanguage {
+        // 不要用 Locale.current：它跟随的是区域格式（如 en_US），而非系统语言。
+        let identifier = Locale.preferredLanguages.first
+            ?? Locale.current.language.languageCode?.identifier
+            ?? "en"
+        return isChineseIdentifier(identifier) ? .zh : .en
+    }
+
+    /// 识别 zh、zh-Hans、zh-Hant、zh-CN 等所有中文标识。
+    static func isChineseIdentifier(_ identifier: String) -> Bool {
+        identifier.lowercased().hasPrefix("zh")
+    }
 }
 
 enum AppTheme: String, CaseIterable, Codable {

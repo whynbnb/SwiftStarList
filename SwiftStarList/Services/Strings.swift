@@ -2,13 +2,7 @@ import Foundation
 
 enum L {
     static var s: Strings {
-        let lang = SettingsManager.shared.settings.language
-        switch lang {
-        case .system:
-            return Locale.current.language.languageCode?.identifier == "zh" ? .zh : .en
-        case .zh: return .zh
-        case .en: return .en
-        }
+        AppLanguage.resolved == .zh ? .zh : .en
     }
 }
 
