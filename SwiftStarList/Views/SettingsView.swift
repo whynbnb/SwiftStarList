@@ -5,6 +5,33 @@ struct SettingsView: View {
     @State private var showToken = false
 
     var body: some View {
+        TabView {
+            generalTab
+                .tabItem { Label(L.s.generalTab, systemImage: "gearshape") }
+
+            githubTab
+                .tabItem { Label(L.s.githubSection, systemImage: "network") }
+
+            llmTab
+                .tabItem { Label("LLM", systemImage: "sparkles") }
+        }
+        .id(settingsManager.languageVersion)
+        .frame(width: 480, height: 380)
+        .onDisappear {
+            settingsManager.isSettingsOpen = false
+            if settingsManager.settings.theme == .system {
+                NSApp.appearance = nil
+                for window in NSApp.windows {
+                    window.appearance = nil
+                }
+            }
+        }
+        .onAppear {
+            settingsManager.isSettingsOpen = true
+        }
+    }
+
+    private var generalTab: some View {
         Form {
             Section(L.s.languageSection) {
                 Picker(L.s.languageSection, selection: $settingsManager.settings.language) {
@@ -21,7 +48,12 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+        .formStyle(.grouped)
+    }
 
+    private var githubTab: some View {
+        Form {
             Section(L.s.githubSection) {
                 HStack {
                     if showToken {
@@ -37,7 +69,12 @@ struct SettingsView: View {
 
                 ProxyConfigSection(config: $settingsManager.settings.githubProxyConfig)
             }
+        }
+        .formStyle(.grouped)
+    }
 
+    private var llmTab: some View {
+        Form {
             Section(L.s.llmSection) {
                 TextField(L.s.baseURL, text: $settingsManager.settings.llmConfig.baseURL)
                     .textContentType(.URL)
@@ -52,20 +89,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .id(settingsManager.languageVersion)
-        .frame(minWidth: 500, minHeight: 500)
-        .onDisappear {
-            settingsManager.isSettingsOpen = false
-            if settingsManager.settings.theme == .system {
-                NSApp.appearance = nil
-                for window in NSApp.windows {
-                    window.appearance = nil
-                }
-            }
-        }
-        .onAppear {
-            settingsManager.isSettingsOpen = true
-        }
     }
 }
 

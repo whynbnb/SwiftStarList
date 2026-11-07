@@ -57,6 +57,7 @@ struct Strings {
     let port: String
     let autoAnalyze: String
     let languageSection: String
+    let generalTab: String
     let themeSection: String
     let systemLanguage: String
     let systemTheme: String
@@ -153,6 +154,7 @@ struct Strings {
         port: "端口",
         autoAnalyze: "点击AI分析时自动开始",
         languageSection: "语言",
+        generalTab: "通用",
         themeSection: "外观",
         systemLanguage: "跟随系统",
         systemTheme: "跟随系统",
@@ -250,6 +252,7 @@ struct Strings {
         port: "Port",
         autoAnalyze: "Auto-start on clicking AI Analysis",
         languageSection: "Language",
+        generalTab: "General",
         themeSection: "Appearance",
         systemLanguage: "System",
         systemTheme: "System",
