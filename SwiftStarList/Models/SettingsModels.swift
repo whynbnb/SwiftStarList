@@ -119,8 +119,15 @@ struct LLMConfig: Codable {
     var apiKey: String
     var model: String
     var proxyConfig: ProxyConfig
+    var customPrompt: String?
 
-    static let `default` = LLMConfig(baseURL: "https://api.openai.com", apiKey: "", model: "gpt-4o-mini", proxyConfig: .default)
+    static let `default` = LLMConfig(
+        baseURL: "https://api.openai.com",
+        apiKey: "",
+        model: "gpt-4o-mini",
+        proxyConfig: .default,
+        customPrompt: nil
+    )
 }
 
 struct AppSettings: Codable {

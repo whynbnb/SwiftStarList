@@ -70,6 +70,11 @@ actor GitHubService {
         return wrapper?.license
     }
 
+    func fetchRepoDetails(owner: String, repo: String, settings: AppSettings) async throws -> RepoDetails {
+        let url = "https://api.github.com/repos/\(owner)/\(repo)"
+        return try await network.request(url, settings: settings)
+    }
+
     func fetchOpenIssues(owner: String, repo: String, settings: AppSettings, perPage: Int = 5) async throws -> [RepoIssue] {
         let url = "https://api.github.com/repos/\(owner)/\(repo)/issues?state=open&sort=created&direction=desc&per_page=\(perPage)"
         let issues: [RepoIssue] = try await network.request(url, settings: settings)

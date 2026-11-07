@@ -160,6 +160,51 @@ struct RepoLicense: Codable {
     }
 }
 
+/// GET /repos/{owner}/{repo}，用于给 AI 提供更完整的项目概况
+struct RepoDetails: Codable {
+    let fullName: String
+    let description: String?
+    let homepage: String?
+    let language: String?
+    let topics: [String]?
+    let stargazersCount: Int
+    let watchersCount: Int?
+    let forksCount: Int
+    let openIssuesCount: Int
+    let subscribersCount: Int?
+    let networkCount: Int?
+    let size: Int?
+    let defaultBranch: String?
+    let archived: Bool?
+    let disabled: Bool?
+    let fork: Bool?
+    let hasIssues: Bool?
+    let hasWiki: Bool?
+    let hasPages: Bool?
+    let createdAt: String?
+    let updatedAt: String?
+    let pushedAt: String?
+    let license: RepoLicense?
+
+    enum CodingKeys: String, CodingKey {
+        case description, homepage, language, topics, size, archived, disabled, fork, license
+        case fullName = "full_name"
+        case stargazersCount = "stargazers_count"
+        case watchersCount = "watchers_count"
+        case forksCount = "forks_count"
+        case openIssuesCount = "open_issues_count"
+        case subscribersCount = "subscribers_count"
+        case networkCount = "network_count"
+        case defaultBranch = "default_branch"
+        case hasIssues = "has_issues"
+        case hasWiki = "has_wiki"
+        case hasPages = "has_pages"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case pushedAt = "pushed_at"
+    }
+}
+
 struct RepoIssue: Codable, Identifiable {
     let id: Int
     let number: Int

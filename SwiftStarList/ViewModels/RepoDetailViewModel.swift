@@ -5,6 +5,7 @@ final class RepoDetailViewModel: ObservableObject {
     @Published var readmeContent: String?
     @Published var readmeFailed = false
     @Published var analysis: String?
+    @Published var analysisResult: RepoAnalysis?
     @Published var isLoadingREADME = false
     @Published var isLoadingAnalysis = false
     @Published var errorMessage: String?
@@ -36,6 +37,7 @@ final class RepoDetailViewModel: ObservableObject {
         readmeContent = nil
         readmeFailed = false
         analysis = nil
+        analysisResult = nil
         errorMessage = nil
         activityErrorMessage = nil
         isLoadingREADME = false
@@ -94,21 +96,44 @@ final class RepoDetailViewModel: ObservableObject {
 
         guard generation == analysisGeneration, !Task.isCancelled else { return }
 
-        guard let readme = readmeContent, !readmeFailed else {
-            if generation == analysisGeneration { errorMessage = L.s.readReadmeFirst }
-            return
-        }
+        // README 获取失败时仍然可以基于元数据分析
+        let readme = readmeFailed ? "" : (readmeContent ?? "")
 
         isLoadingAnalysis = true
         errorMessage = nil
         analysis = ""
+        analysisResult = nil
         defer {
             if generation == analysisGeneration { isLoadingAnalysis = false }
         }
 
         do {
+            let details = try? await githubService.fetchRepoDetails(
+                owner: repo.owner.login,
+                repo: repo.name,
+                settings: settings
+            )
+            guard generation == analysisGeneration, !Task.isCancelled else { return }
+
+            // 给动态数据一点时间，尽量让提示词包含语言构成、贡献者、提交等信息
+            await waitForActivityContext()
+            guard generation == analysisGeneration, !Task.isCancelled else { return }
+
+            let input = RepoAnalysisInput(
+                repo: repo,
+                details: details,
+                readme: readme,
+                languages: languages,
+                contributors: contributors,
+                releases: recentReleases,
+                commits: recentCommits,
+                issues: openIssues,
+                pulls: openPulls,
+                license: license
+            )
+
             let result = try await llmService.analyzeStream(
-                repo: repo, readme: readme, settings: settings,
+                input: input, settings: settings,
                 onChunk: { [weak self] partial in
                     guard !Task.isCancelled else { return }
                     Task { @MainActor in
@@ -119,6 +144,7 @@ final class RepoDetailViewModel: ObservableObject {
             )
             guard generation == analysisGeneration, !Task.isCancelled else { return }
             analysis = result
+            analysisResult = RepoAnalysis.parse(from: result)
         } catch is CancellationError {
             // 用户切换了仓库，丢弃结果
         } catch {
@@ -176,5 +202,15 @@ final class RepoDetailViewModel: ObservableObject {
 
     private nonisolated static func capture<T>(_ operation: @escaping () async throws -> T) async -> T? {
         try? await operation()
+    }
+
+    /// 最多等待 1.5 秒，避免自动分析时动态数据尚未加载完成
+    private func waitForActivityContext() async {
+        var waited = 0
+        while isLoadingActivity && waited < 1500 {
+            if Task.isCancelled { return }
+            try? await Task.sleep(for: .milliseconds(100))
+            waited += 100
+        }
     }
 }

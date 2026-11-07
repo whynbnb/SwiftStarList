@@ -16,7 +16,7 @@ struct SettingsView: View {
                 .tabItem { Label("LLM", systemImage: "sparkles") }
         }
         .id(settingsManager.languageVersion)
-        .frame(width: 480, height: 380)
+        .frame(width: 480, height: 420)
         .onDisappear {
             settingsManager.isSettingsOpen = false
             if settingsManager.settings.theme == .system {
@@ -87,8 +87,25 @@ struct SettingsView: View {
 
                 Toggle(L.s.autoAnalyze, isOn: $settingsManager.settings.autoAnalyze)
             }
+
+            Section(L.s.customPrompt) {
+                TextEditor(text: customPromptBinding)
+                    .font(.system(size: 12))
+                    .frame(minHeight: 72)
+
+                Text(L.s.customPromptHint)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .formStyle(.grouped)
+    }
+
+    private var customPromptBinding: Binding<String> {
+        Binding(
+            get: { settingsManager.settings.llmConfig.customPrompt ?? "" },
+            set: { settingsManager.settings.llmConfig.customPrompt = $0.isEmpty ? nil : $0 }
+        )
     }
 }
 

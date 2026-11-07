@@ -128,13 +128,6 @@ struct RepoDetailView: View {
                 .padding(.vertical, 8)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onChange(of: viewModel.analysis ?? "") { oldValue, newValue in
-                if newValue.count > oldValue.count {
-                    withAnimation {
-                        proxy.scrollTo("analysis-end", anchor: .bottom)
-                    }
-                }
-            }
         }
     }
 
@@ -416,24 +409,15 @@ struct RepoDetailView: View {
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 200)
-        } else if let analysis = viewModel.analysis, !analysis.isEmpty {
-            VStack(alignment: .leading) {
-                Markdown(analysis)
-                    .markdownTheme(.transparent)
-                    .tint(.purple)
-                if viewModel.isLoadingAnalysis {
-                    HStack(spacing: 6) {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                        Text(L.s.analyzing)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .id(settingsManager.languageVersion)
-                    }
-                    .padding(.top, 4)
+        } else if let result = viewModel.analysisResult {
+            VStack(alignment: .leading, spacing: 12) {
+                RepoAnalysisCard(result: result, raw: viewModel.analysis ?? "")
+                Button(L.s.reanalyze) {
+                    viewModel.startAnalysis(repo: repo, settings: settingsManager.settings)
                 }
-                Color.clear.frame(height: 1).id("analysis-end")
+                .buttonStyle(.bordered)
             }
+            .id(settingsManager.languageVersion)
         } else if viewModel.isLoadingAnalysis {
             VStack(spacing: 12) {
                 ProgressView()
@@ -442,6 +426,16 @@ struct RepoDetailView: View {
                     .id(settingsManager.languageVersion)
             }
             .frame(maxWidth: .infinity, minHeight: 200)
+        } else if let analysis = viewModel.analysis, !analysis.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Label(L.s.analysisRawFallback, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .id(settingsManager.languageVersion)
+                Markdown(analysis)
+                    .markdownTheme(.transparent)
+                    .tint(.purple)
+            }
         } else {
             VStack(spacing: 16) {
                 Image(systemName: "sparkles")
@@ -695,6 +689,211 @@ struct RepoDetailView: View {
                     .padding(.vertical, 2)
                 }
             }
+        }
+    }
+}
+
+private struct RepoAnalysisCard: View {
+    let result: RepoAnalysis
+    let raw: String
+    @State private var showRaw = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            summaryView
+            chipSection(L.s.analysisCategories, result.categories)
+            bulletSection(L.s.analysisFeatures, result.coreFeatures)
+            chipSection(L.s.analysisTechStack, result.techStack)
+            bulletSection(L.s.analysisUseCases, result.useCases)
+            activitySection
+            audienceSection
+            prosConsSection
+            bulletSection(L.s.analysisSimilar, result.similarProjects)
+            recommendationSection
+            rawSection
+        }
+    }
+
+    private var summaryView: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "sparkles")
+                .foregroundColor(.purple)
+            Text(result.summary)
+                .font(.system(size: 14, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.purple.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private func chipSection(_ title: String, _ values: [String]?) -> some View {
+        if let values, !values.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                FlowLayout(spacing: 6) {
+                    ForEach(values, id: \.self) { value in
+                        Text(value)
+                            .font(.system(size: 11))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.accentColor.opacity(0.1))
+                            .cornerRadius(5)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func bulletSection(_ title: String, _ values: [String]?) -> some View {
+        if let values, !values.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(title)
+                ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                    HStack(alignment: .top, spacing: 6) {
+                        Text("•")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        Text(value)
+                            .font(.system(size: 12))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var activitySection: some View {
+        if let level = result.activityLevel, !level.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisActivity)
+                HStack(alignment: .top, spacing: 8) {
+                    Text(activityText(level))
+                        .font(.system(size: 11, weight: .medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(activityColor(level).opacity(0.15))
+                        .foregroundColor(activityColor(level))
+                        .cornerRadius(5)
+                    if let reason = result.activityReason, !reason.isEmpty {
+                        Text(reason)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var audienceSection: some View {
+        if let audience = result.audience, !audience.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisAudience)
+                Text(audience)
+                    .font(.system(size: 12))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var prosConsSection: some View {
+        let pros = result.pros ?? []
+        let cons = result.cons ?? []
+        if !pros.isEmpty || !cons.isEmpty {
+            HStack(alignment: .top, spacing: 20) {
+                bulletColumn(L.s.analysisPros, pros, color: .green)
+                bulletColumn(L.s.analysisCons, cons, color: .orange)
+            }
+        }
+    }
+
+    private func bulletColumn(_ title: String, _ values: [String], color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle(title)
+            if values.isEmpty {
+                Text("—")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                    HStack(alignment: .top, spacing: 6) {
+                        Circle()
+                            .fill(color)
+                            .frame(width: 4, height: 4)
+                            .padding(.top, 6)
+                        Text(value)
+                            .font(.system(size: 12))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var recommendationSection: some View {
+        if let recommendation = result.recommendation, !recommendation.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle(L.s.analysisRecommendation)
+                Text(recommendation)
+                    .font(.system(size: 12))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.purple.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var rawSection: some View {
+        if !raw.isEmpty {
+            DisclosureGroup(isExpanded: $showRaw) {
+                Markdown(raw)
+                    .markdownTheme(.transparent)
+                    .tint(.purple)
+                    .textSelection(.enabled)
+                    .padding(.top, 6)
+            } label: {
+                Text(L.s.rawOutput)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundColor(.secondary)
+    }
+
+    private func activityText(_ level: String) -> String {
+        switch level.lowercased() {
+        case "high": return L.s.activityHigh
+        case "medium": return L.s.activityMedium
+        case "low": return L.s.activityLow
+        default: return level
+        }
+    }
+
+    private func activityColor(_ level: String) -> Color {
+        switch level.lowercased() {
+        case "high": return .green
+        case "medium": return .orange
+        case "low": return .gray
+        default: return .secondary
         }
     }
 }

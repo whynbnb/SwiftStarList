@@ -40,10 +40,27 @@ struct Strings {
     let analyzing: String
     let analyzeRepo: String
     let startAnalysis: String
+    let analysisCategories: String
+    let analysisFeatures: String
+    let analysisTechStack: String
+    let analysisUseCases: String
+    let analysisActivity: String
+    let analysisAudience: String
+    let analysisPros: String
+    let analysisCons: String
+    let analysisSimilar: String
+    let analysisRecommendation: String
+    let rawOutput: String
+    let analysisRawFallback: String
+    let activityHigh: String
+    let activityMedium: String
+    let activityLow: String
+    let customPrompt: String
+    let customPromptHint: String
+    let reanalyze: String
     let llmNoResponse: String
     let configureApiKey: String
     let analyzeFailed: String
-    let readReadmeFirst: String
     let githubSection: String
     let githubToken: String
     let llmSection: String
@@ -131,10 +148,27 @@ struct Strings {
         analyzing: "AI 正在分析...",
         analyzeRepo: "点击下方按钮让AI分析此仓库",
         startAnalysis: "开始分析",
+        analysisCategories: "分类",
+        analysisFeatures: "核心功能",
+        analysisTechStack: "技术栈",
+        analysisUseCases: "适用场景",
+        analysisActivity: "活跃度",
+        analysisAudience: "目标用户",
+        analysisPros: "优点",
+        analysisCons: "不足",
+        analysisSimilar: "相似项目",
+        analysisRecommendation: "建议",
+        rawOutput: "原始输出",
+        analysisRawFallback: "未能解析为结构化结果，以下为原始输出",
+        activityHigh: "活跃",
+        activityMedium: "一般",
+        activityLow: "不活跃",
+        customPrompt: "附加提示词",
+        customPromptHint: "会追加到分析提示词中，可指定关注点、风格或额外要求。",
+        reanalyze: "重新分析",
         llmNoResponse: "LLM未返回有效响应",
         configureApiKey: "请先配置LLM API Key",
         analyzeFailed: "LLM分析失败",
-        readReadmeFirst: "无法获取README，请先确保README加载成功",
         githubSection: "GitHub",
         githubToken: "GitHub Token",
         llmSection: "LLM 设置",
@@ -223,10 +257,27 @@ struct Strings {
         analyzing: "AI is analyzing...",
         analyzeRepo: "Click the button below to let AI analyze this repo",
         startAnalysis: "Start Analysis",
+        analysisCategories: "Categories",
+        analysisFeatures: "Core Features",
+        analysisTechStack: "Tech Stack",
+        analysisUseCases: "Use Cases",
+        analysisActivity: "Activity",
+        analysisAudience: "Audience",
+        analysisPros: "Pros",
+        analysisCons: "Cons",
+        analysisSimilar: "Similar Projects",
+        analysisRecommendation: "Recommendation",
+        rawOutput: "Raw Output",
+        analysisRawFallback: "Could not parse structured result; showing raw output",
+        activityHigh: "Active",
+        activityMedium: "Moderate",
+        activityLow: "Inactive",
+        customPrompt: "Additional Prompt",
+        customPromptHint: "Appended to the analysis prompt. Use it to add focus areas, style, or extra requirements.",
+        reanalyze: "Re-analyze",
         llmNoResponse: "LLM returned no valid response",
         configureApiKey: "Please configure LLM API Key first",
         analyzeFailed: "LLM analysis failed",
-        readReadmeFirst: "Unable to get README, please ensure README loads successfully first",
         githubSection: "GitHub",
         githubToken: "GitHub Token",
         llmSection: "LLM Settings",
