@@ -55,18 +55,6 @@ struct StarListView: View {
             .navigationTitle(L.s.starListTitle)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300)
             .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    Button(action: {
-                        DataManagementWindowController.shared.show(
-                            settingsManager: settingsManager,
-                            returnWindow: NSApp.keyWindow ?? NSApp.mainWindow
-                        )
-                    }) {
-                        Image(systemName: "externaldrive")
-                    }
-                    .help(L.d.dataManagement)
-                }
-
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: {
                         Task { await viewModel.fetchAll(settings: settingsManager.settings) }
@@ -97,6 +85,19 @@ struct StarListView: View {
             }
         }
         .navigationSplitViewStyle(.automatic)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    DataManagementWindowController.shared.show(
+                        settingsManager: settingsManager,
+                        returnWindow: NSApp.keyWindow ?? NSApp.mainWindow
+                    )
+                }) {
+                    Image(systemName: "externaldrive")
+                }
+                .help(L.d.dataManagement)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .repoCacheDidChange)) { _ in
             viewModel.reloadFromCache()
             if let selectedRepo,
