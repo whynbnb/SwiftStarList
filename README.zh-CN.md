@@ -54,6 +54,10 @@ GitHub Token 用于读取你的 Star 仓库，LLM 配置仅在 AI 分析时使�
 
 文件权限为 `0600`。
 
+完整配置可在 设置 → 通用 中导出和导入。默认不包含凭据，可手动勾选包含。
+
+![通用设置](docs/settings-general-zh.png)
+
 ## 构建
 
 ```bash

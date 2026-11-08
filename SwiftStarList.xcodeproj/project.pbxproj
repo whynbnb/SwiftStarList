@@ -32,6 +32,8 @@
 		A10025 /* SnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10025; };
 		A10026 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10026; };
 		A10027 /* SnapshotViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10027; };
+		A10028 /* ConfigArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10028; };
+		A10029 /* ConfigStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10029; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +72,8 @@
 		B10025 /* SnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotStore.swift; sourceTree = "<group>"; };
 		B10026 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
 		B10027 /* SnapshotViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotViews.swift; sourceTree = "<group>"; };
+		B10028 /* ConfigArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigArchive.swift; sourceTree = "<group>"; };
+		B10029 /* ConfigStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigStrings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +124,7 @@
 				B10003 /* LLMModels.swift */,
 				B10004 /* SettingsModels.swift */,
 				B10024 /* StarSnapshot.swift */,
+				B10028 /* ConfigArchive.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -137,6 +142,7 @@
 				B10022 /* CredentialStore.swift */,
 				B10023 /* DataStrings.swift */,
 				B10025 /* SnapshotStore.swift */,
+				B10029 /* ConfigStrings.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -262,6 +268,8 @@
 				A10025 /* SnapshotStore.swift in Sources */,
 				A10026 /* DataManagementView.swift in Sources */,
 				A10027 /* SnapshotViews.swift in Sources */,
+				A10028 /* ConfigArchive.swift in Sources */,
+				A10029 /* ConfigStrings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

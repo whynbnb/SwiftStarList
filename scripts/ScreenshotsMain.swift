@@ -104,6 +104,12 @@ struct ScreenshotMain {
                 to: outputDirectory.appendingPathComponent("snapshots-\(language).png")
             )
             try? FileManager.default.removeItem(at: directory)
+        case "settings-general":
+            renderHosting(
+                SettingsShot(manager: manager, tab: .general),
+                size: CGSize(width: 480, height: 550),
+                to: outputDirectory.appendingPathComponent("settings-general-\(language).png")
+            )
         default:
             renderHosting(
                 SettingsShot(manager: manager),
@@ -754,6 +760,7 @@ private struct DetailPreview: View {
 
 private struct SettingsShot: View {
     let manager: SettingsManager
+    var tab: SettingsTab = .llm
 
     var body: some View {
         VStack(spacing: 0) {
@@ -762,8 +769,14 @@ private struct SettingsShot: View {
             tabBar
             Divider()
 
-            SettingsView(settingsManager: manager).llmTab
-                .frame(width: 480, height: 470)
+            Group {
+                if tab == .general {
+                    SettingsView(settingsManager: manager).generalTab
+                } else {
+                    SettingsView(settingsManager: manager).llmTab
+                }
+            }
+            .frame(width: 480, height: 470)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -802,9 +815,9 @@ private struct SettingsShot: View {
 
     private var tabBar: some View {
         HStack(spacing: 6) {
-            tab(L.s.generalTab, icon: "gearshape", selected: false)
-            tab(L.s.githubSection, icon: "network", selected: false)
-            tab("LLM", icon: "sparkles", selected: true)
+            tab(L.s.generalTab, icon: "gearshape", selected: tab == .general)
+            tab(L.s.githubSection, icon: "network", selected: tab == .github)
+            tab("LLM", icon: "sparkles", selected: tab == .llm)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)

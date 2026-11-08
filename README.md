@@ -54,6 +54,10 @@ The GitHub Token is required to read your starred repositories. The LLM configur
 
 The file is created with `0600` permissions.
 
+The whole configuration can be exported and imported from Settings → General. Credentials are excluded by default and can be included explicitly.
+
+![General settings](docs/settings-general-en.png)
+
 ## Build
 
 ```bash

@@ -52,4 +52,5 @@ for language in en zh; do
     CFFIXED_USER_HOME="$WORK/home" HOME="$WORK/home" ./.build/debug/Screenshots "$ROOT/docs" data "$language"
     CFFIXED_USER_HOME="$WORK/home" HOME="$WORK/home" ./.build/debug/Screenshots "$ROOT/docs" snapshots "$language"
     CFFIXED_USER_HOME="$WORK/home" HOME="$WORK/home" ./.build/debug/Screenshots "$ROOT/docs" settings "$language"
+    CFFIXED_USER_HOME="$WORK/home" HOME="$WORK/home" ./.build/debug/Screenshots "$ROOT/docs" settings-general "$language"
 done

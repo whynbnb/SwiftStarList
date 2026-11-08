@@ -1,4 +1,6 @@
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable {
     case general
@@ -11,7 +13,24 @@ struct SettingsView: View {
     @State private var showToken = false
     @State private var editingProfileID: UUID?
     @State private var selectedTab: SettingsTab
+    @State private var includeCredentials = false
+    @State private var configStatusText: String?
+    @State private var configStatusIsError = false
+    @State private var pendingImport: AppConfigArchive?
+    @State private var prompt: ConfigPrompt?
     @Environment(\.openWindow) private var openWindow
+
+    private enum ConfigPrompt: Identifiable {
+        case importConfiguration
+        case exportCredentials
+
+        var id: Int {
+            switch self {
+            case .importConfiguration: return 0
+            case .exportCredentials: return 1
+            }
+        }
+    }
 
     init(settingsManager: SettingsManager, initialTab: SettingsTab = .general) {
         _settingsManager = ObservedObject(wrappedValue: settingsManager)
@@ -46,9 +65,36 @@ struct SettingsView: View {
         .onAppear {
             settingsManager.isSettingsOpen = true
         }
+        .alert(item: $prompt) { prompt in
+            switch prompt {
+            case .importConfiguration:
+                return Alert(
+                    title: Text(L.c.importConfiguration),
+                    message: Text(L.c.importConfirmation),
+                    primaryButton: .default(Text(L.c.importConfiguration)) {
+                        applyPendingImport()
+                    },
+                    secondaryButton: .cancel(Text(L.c.cancel)) {
+                        pendingImport = nil
+                    }
+                )
+            case .exportCredentials:
+                return Alert(
+                    title: Text(L.c.exportConfiguration),
+                    message: Text(L.c.credentialsExportWarning),
+                    primaryButton: .default(Text(L.c.exportConfiguration)) {
+                        // 等警告弹窗完全关闭后再打开保存面板，避免嵌套模态。
+                        DispatchQueue.main.async {
+                            performExportConfiguration()
+                        }
+                    },
+                    secondaryButton: .cancel(Text(L.c.cancel))
+                )
+            }
+        }
     }
 
-    private var generalTab: some View {
+    var generalTab: some View {
         Form {
             Section(L.s.languageSection) {
                 Picker(L.s.languageSection, selection: $settingsManager.settings.language) {
@@ -71,6 +117,36 @@ struct SettingsView: View {
                     openWindow(id: "data-management")
                 } label: {
                     Label(L.d.openDataManagement, systemImage: "externaldrive")
+                }
+            }
+
+            Section(L.c.configuration) {
+                Toggle(L.c.includeCredentials, isOn: $includeCredentials)
+
+                Text(L.c.includeCredentialsHint)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 10) {
+                    Button {
+                        startExportConfiguration()
+                    } label: {
+                        Label(L.c.exportConfiguration, systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        startImportConfiguration()
+                    } label: {
+                        Label(L.c.importConfiguration, systemImage: "square.and.arrow.down")
+                    }
+
+                    Spacer(minLength: 0)
+                }
+
+                if let configStatusText {
+                    Text(configStatusText)
+                        .font(.caption)
+                        .foregroundColor(configStatusIsError ? .red : .green)
                 }
             }
         }
@@ -265,6 +341,81 @@ struct SettingsView: View {
         if !profiles.isEmpty {
             editingProfileID = profiles[min(index, profiles.count - 1)].id
         }
+    }
+
+    // MARK: - Configuration import/export
+
+    private func startExportConfiguration() {
+        if includeCredentials {
+            prompt = .exportCredentials
+        } else {
+            performExportConfiguration()
+        }
+    }
+
+    private func performExportConfiguration() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = configurationFileName
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let archive = AppConfigArchive.make(
+                settings: settingsManager.settings,
+                includeCredentials: includeCredentials
+            )
+            try archive.encoded().write(to: url, options: .atomic)
+            showConfigStatus(L.c.exportSucceeded)
+        } catch {
+            showConfigStatus("\(L.c.exportFailed): \(error.localizedDescription)", isError: true)
+        }
+    }
+
+    private func startImportConfiguration() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let data = try Data(contentsOf: url)
+            pendingImport = try AppConfigArchive.decode(from: data)
+            prompt = .importConfiguration
+        } catch {
+            showConfigStatus("\(L.c.importFailed): \(error.localizedDescription)", isError: true)
+        }
+    }
+
+    private func applyPendingImport() {
+        guard let archive = pendingImport else { return }
+
+        let merged = archive.merged(with: settingsManager.settings)
+        settingsManager.settings = merged
+        editingProfileID = nil
+        ensureEditingProfile()
+        pendingImport = nil
+        showConfigStatus(L.c.importSucceeded)
+    }
+
+    private func showConfigStatus(_ text: String, isError: Bool = false) {
+        configStatusText = text
+        configStatusIsError = isError
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(4))
+            guard configStatusText == text, configStatusIsError == isError else { return }
+            configStatusText = nil
+        }
+    }
+
+    private var configurationFileName: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return "swiftstarlist-config-\(formatter.string(from: Date())).json"
     }
 }
 
