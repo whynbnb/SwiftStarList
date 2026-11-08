@@ -9,6 +9,8 @@ import SwiftUI
 final class DataManagementWindowController: NSObject, NSWindowDelegate {
     static let shared = DataManagementWindowController()
 
+    private static let frameAutosaveName = "SwiftStarList.DataManagementWindow"
+
     private var window: NSWindow?
     private weak var returnWindow: NSWindow?
     private var closeObserver: NSObjectProtocol?
@@ -46,7 +48,11 @@ final class DataManagementWindowController: NSObject, NSWindowDelegate {
         window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         window.delegate = self
 
-        if let screen = NSScreen.main {
+        // 记忆窗口大小与位置；只有首次打开时才居中。
+        _ = window.setFrameAutosaveName(Self.frameAutosaveName)
+        if window.setFrameUsingName(Self.frameAutosaveName) {
+            clampToMinimumSize(window)
+        } else if let screen = NSScreen.main {
             let visible = screen.visibleFrame
             let origin = NSPoint(
                 x: visible.midX - window.frame.width / 2,
@@ -87,6 +93,25 @@ final class DataManagementWindowController: NSObject, NSWindowDelegate {
                     self.present(window)
                 }
             }
+        }
+    }
+
+    private func clampToMinimumSize(_ window: NSWindow) {
+        let minSize = window.minSize
+        var frame = window.frame
+        var changed = false
+
+        if frame.width < minSize.width {
+            frame.size.width = minSize.width
+            changed = true
+        }
+        if frame.height < minSize.height {
+            frame.size.height = minSize.height
+            changed = true
+        }
+
+        if changed {
+            window.setFrame(frame, display: false)
         }
     }
 
@@ -132,6 +157,10 @@ final class DataManagementWindowController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        if let closingWindow = notification.object as? NSWindow {
+            closingWindow.saveFrame(usingName: Self.frameAutosaveName)
+        }
+
         removeCloseObserver()
         window = nil
 

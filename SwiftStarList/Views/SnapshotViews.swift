@@ -34,8 +34,9 @@ struct SnapshotsView: View {
     }
 
     var body: some View {
-        HSplitView {
+        RememberedSplitView {
             sidebar
+        } detail: {
             detail
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -139,7 +140,7 @@ struct SnapshotsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.primary.opacity(0.04))
         }
-        .frame(minWidth: 240, idealWidth: 280, maxWidth: 340, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Detail
@@ -357,6 +358,89 @@ struct SnapshotsView: View {
     }
 }
 
+// MARK: - Persistent split
+
+/// 侧边栏宽度使用 `@AppStorage` 记忆，替代无法保存分隔位置的 `HSplitView`。
+private struct RememberedSplitView<Sidebar: View, Detail: View>: View {
+    private let minSidebarWidth: CGFloat = 200
+    private let maxSidebarWidth: CGFloat = 420
+    private let detailMinWidth: CGFloat = 500
+    private let defaultSidebarWidth: CGFloat = 280
+
+    @AppStorage("dataManagement.snapshotSidebarWidth") private var sidebarWidth: Double = 280
+    @State private var dragStartWidth: Double?
+
+    let sidebar: Sidebar
+    let detail: Detail
+
+    init(
+        @ViewBuilder sidebar: () -> Sidebar,
+        @ViewBuilder detail: () -> Detail
+    ) {
+        self.sidebar = sidebar()
+        self.detail = detail()
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let maxWidth = max(
+                minSidebarWidth,
+                min(maxSidebarWidth, proxy.size.width - detailMinWidth)
+            )
+            let width = min(max(CGFloat(sidebarWidth), minSidebarWidth), maxWidth)
+
+            HStack(spacing: 0) {
+                sidebar
+                    .frame(width: width)
+                    .frame(maxHeight: .infinity)
+
+                divider(maxWidth: maxWidth)
+
+                detail
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+    }
+
+    private func divider(maxWidth: CGFloat) -> some View {
+        ZStack {
+            Color(nsColor: .separatorColor)
+                .frame(width: 1)
+        }
+        .frame(width: 8)
+        .frame(maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            if hovering {
+                NSCursor.resizeLeftRight.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 1)
+                .onChanged { value in
+                    if dragStartWidth == nil {
+                        dragStartWidth = sidebarWidth
+                    }
+                    let proposed = (dragStartWidth ?? sidebarWidth)
+                        + Double(value.translation.width)
+                    sidebarWidth = min(
+                        max(proposed, Double(minSidebarWidth)),
+                        Double(maxWidth)
+                    )
+                }
+                .onEnded { _ in
+                    dragStartWidth = nil
+                }
+        )
+        .onTapGesture(count: 2) {
+            sidebarWidth = defaultSidebarWidth
+        }
+        .help(L.d.resetSplitWidth)
+    }
+}
+
 // MARK: - Sidebar row
 
 private struct SnapshotRow: View {
@@ -387,21 +471,7 @@ struct SnapshotDetailContent: View {
     @Binding var searchText: String
 
     private var filteredRepos: [StarredRepo] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let repos: [StarredRepo]
-
-        if query.isEmpty {
-            repos = snapshot.repos
-        } else {
-            repos = snapshot.repos.filter {
-                $0.fullName.localizedCaseInsensitiveContains(query)
-                    || ($0.description?.localizedCaseInsensitiveContains(query) ?? false)
-                    || ($0.language?.localizedCaseInsensitiveContains(query) ?? false)
-                    || $0.topics.contains { $0.localizedCaseInsensitiveContains(query) }
-            }
-        }
-
-        return repos.sorted { ($0.starredAt ?? "") > ($1.starredAt ?? "") }
+        RepoSearch.filter(snapshot.repos, query: searchText)
     }
 
     var body: some View {
@@ -443,39 +513,16 @@ struct SnapshotDetailContent: View {
                     }
                 }
 
-                HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField(L.d.searchRepos, text: $searchText)
-                        .textFieldStyle(.plain)
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(8)
+                StarSearchField(text: $searchText)
 
                 if filteredRepos.isEmpty {
-                    Text(L.d.noData)
+                    Text(L.d.noMatchingRepos)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 30)
                 } else {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredRepos) { repo in
-                            SnapshotRepoRow(repo: repo)
-                            Divider()
-                        }
-                    }
+                    RepoYearList(repos: filteredRepos)
                 }
             }
             .padding(16)

@@ -4,7 +4,17 @@ struct DataStrings {
     let dataManagement: String
     let dataManagementSubtitle: String
     let transferTab: String
+    let browseTab: String
     let snapshotsTab: String
+    let groupedByYearHint: String
+    let repositoryCountFormat: String
+    let yearCountFormat: String
+    let unknownYear: String
+    let noMatchingRepos: String
+    let noDataHint: String
+    let starredAt: String
+    let openInGitHub: String
+    let resetSplitWidth: String
     let currentData: String
     let currentDataHint: String
     let repositories: String
@@ -72,7 +82,17 @@ struct DataStrings {
         dataManagement: "数据管理",
         dataManagementSubtitle: "导入导出 Star 数据，并保存快照以查看和对比变化。",
         transferTab: "导入 / 导出",
+        browseTab: "Star 明细",
         snapshotsTab: "快照",
+        groupedByYearHint: "按 Star 年份分组",
+        repositoryCountFormat: "%d 个仓库",
+        yearCountFormat: "%d 个年份",
+        unknownYear: "未知年份",
+        noMatchingRepos: "没有匹配的仓库",
+        noDataHint: "从主窗口刷新 Star 列表后，这里会显示按年份分组的明细。",
+        starredAt: "Star 时间",
+        openInGitHub: "在 GitHub 中打开",
+        resetSplitWidth: "双击恢复默认宽度",
         currentData: "当前数据",
         currentDataHint: "本地缓存的 Star 仓库数据。",
         repositories: "仓库数量",
@@ -141,7 +161,17 @@ struct DataStrings {
         dataManagement: "Data Management",
         dataManagementSubtitle: "Import and export star data, and keep snapshots to review and compare changes.",
         transferTab: "Import / Export",
+        browseTab: "Star Details",
         snapshotsTab: "Snapshots",
+        groupedByYearHint: "Grouped by star year",
+        repositoryCountFormat: "%d repositories",
+        yearCountFormat: "%d years",
+        unknownYear: "Unknown Year",
+        noMatchingRepos: "No matching repositories",
+        noDataHint: "Refresh the star list from the main window to see details grouped by year.",
+        starredAt: "Starred",
+        openInGitHub: "Open on GitHub",
+        resetSplitWidth: "Double-click to reset width",
         currentData: "Current Data",
         currentDataHint: "Locally cached starred repositories.",
         repositories: "Repositories",

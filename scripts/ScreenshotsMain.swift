@@ -84,6 +84,13 @@ struct ScreenshotMain {
                 size: CGSize(width: 900, height: 620),
                 to: outputDirectory.appendingPathComponent("data-\(language).png")
             )
+        case "data-browse":
+            RepoCache.shared.save(sampleRepos)
+            renderHosting(
+                DataManagementView(settingsManager: manager, initialTab: .browse),
+                size: CGSize(width: 900, height: 620),
+                to: outputDirectory.appendingPathComponent("data-browse-\(language).png")
+            )
         case "snapshots":
             let directory = FileManager.default.temporaryDirectory
                 .appendingPathComponent("swiftstarlist-snapshots-\(UUID().uuidString)", isDirectory: true)
@@ -403,6 +410,74 @@ struct ScreenshotMain {
                 fork: false,
                 homepage: nil,
                 starredAt: "2026-07-12T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 7,
+                name: "swift",
+                fullName: "apple/swift",
+                owner: RepoOwner(login: "apple", avatarUrl: ""),
+                htmlUrl: "https://github.com/apple/swift",
+                description: "The Swift Programming Language.",
+                stargazersCount: 69800,
+                language: "Swift",
+                topics: ["compiler", "language"],
+                createdAt: "2014-01-01T00:00:00Z",
+                updatedAt: "2026-10-28T00:00:00Z",
+                pushedAt: "2026-10-28T00:00:00Z",
+                fork: false,
+                homepage: "https://swift.org",
+                starredAt: "2025-03-12T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 8,
+                name: "next.js",
+                fullName: "vercel/next.js",
+                owner: RepoOwner(login: "vercel", avatarUrl: ""),
+                htmlUrl: "https://github.com/vercel/next.js",
+                description: "The React Framework for the Web.",
+                stargazersCount: 137000,
+                language: "TypeScript",
+                topics: ["react", "framework"],
+                createdAt: "2016-01-01T00:00:00Z",
+                updatedAt: "2026-11-02T00:00:00Z",
+                pushedAt: "2026-11-02T00:00:00Z",
+                fork: false,
+                homepage: "https://nextjs.org",
+                starredAt: "2024-11-02T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 9,
+                name: "linux",
+                fullName: "torvalds/linux",
+                owner: RepoOwner(login: "torvalds", avatarUrl: ""),
+                htmlUrl: "https://github.com/torvalds/linux",
+                description: "Linux kernel source tree.",
+                stargazersCount: 215000,
+                language: "C",
+                topics: ["kernel", "linux"],
+                createdAt: "2011-09-04T00:00:00Z",
+                updatedAt: "2026-11-07T00:00:00Z",
+                pushedAt: "2026-11-07T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2023-01-15T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 10,
+                name: "zig",
+                fullName: "ziglang/zig",
+                owner: RepoOwner(login: "ziglang", avatarUrl: ""),
+                htmlUrl: "https://github.com/ziglang/zig",
+                description: "General-purpose programming language and toolchain.",
+                stargazersCount: 41900,
+                language: "Zig",
+                topics: ["compiler", "language"],
+                createdAt: "2015-01-01T00:00:00Z",
+                updatedAt: "2026-11-06T00:00:00Z",
+                pushedAt: "2026-11-06T00:00:00Z",
+                fork: false,
+                homepage: "https://ziglang.org",
+                starredAt: "2022-06-08T00:00:00Z"
             )
         ]
     }
