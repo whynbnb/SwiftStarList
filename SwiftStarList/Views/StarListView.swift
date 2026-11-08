@@ -5,7 +5,6 @@ struct StarListView: View {
     @ObservedObject var settingsManager: SettingsManager
     @StateObject private var viewModel = StarListViewModel()
     @State private var selectedRepo: StarredRepo?
-    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         NavigationSplitView {
@@ -55,7 +54,10 @@ struct StarListView: View {
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button(action: {
-                        openWindow(id: "data-management")
+                        DataManagementWindowController.shared.show(
+                            settingsManager: settingsManager,
+                            returnWindow: NSApp.keyWindow ?? NSApp.mainWindow
+                        )
                     }) {
                         Image(systemName: "externaldrive")
                     }

@@ -1,8 +1,33 @@
 import Foundation
 
 enum L {
+    private static let languageLock = NSLock()
+    nonisolated(unsafe) private static var storedLanguage: AppLanguage = .en
+
+    /// 当前生效语言。由 SettingsManager 在主线程更新，后台服务可安全读取。
+    static var language: AppLanguage {
+        get {
+            languageLock.lock()
+            defer { languageLock.unlock() }
+            return storedLanguage
+        }
+        set {
+            languageLock.lock()
+            storedLanguage = newValue
+            languageLock.unlock()
+        }
+    }
+
     static var s: Strings {
-        AppLanguage.resolved == .zh ? .zh : .en
+        language == .zh ? .zh : .en
+    }
+
+    static var d: DataStrings {
+        language == .zh ? .zh : .en
+    }
+
+    static var c: ConfigStrings {
+        language == .zh ? .zh : .en
     }
 }
 

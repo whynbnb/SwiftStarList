@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
     private let defaults = UserDefaults.standard
@@ -9,6 +10,7 @@ final class SettingsManager: ObservableObject {
         didSet {
             persist(settings)
             if oldValue.language != settings.language {
+                L.language = AppLanguage.resolve(settings.language)
                 languageVersion += 1
             }
         }
@@ -53,6 +55,7 @@ final class SettingsManager: ObservableObject {
         }
 
         settings = loaded
+        L.language = AppLanguage.resolve(loaded.language)
         persist(loaded)
     }
 

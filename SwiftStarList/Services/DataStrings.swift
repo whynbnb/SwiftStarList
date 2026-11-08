@@ -1,12 +1,5 @@
 import Foundation
 
-extension L {
-    /// 数据管理界面使用的文案
-    static var d: DataStrings {
-        AppLanguage.resolved == .zh ? .zh : .en
-    }
-}
-
 struct DataStrings {
     let dataManagement: String
     let dataManagementSubtitle: String

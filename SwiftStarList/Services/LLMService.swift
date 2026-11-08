@@ -3,7 +3,7 @@ import Foundation
 actor LLMService {
     private let network = NetworkManager.shared
 
-    func analyzeStream(input: RepoAnalysisInput, settings: AppSettings, onChunk: @escaping (String) -> Void) async throws -> String {
+    func analyzeStream(input: RepoAnalysisInput, settings: AppSettings, onChunk: @escaping @Sendable (String) -> Void) async throws -> String {
         let s = L.s
         let isZh = AppLanguage.resolve(settings.language) == .zh
         guard let profile = settings.llmConfig.defaultProfile else {

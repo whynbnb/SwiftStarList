@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 extension Notification.Name {
     /// 本地缓存被外部操作（导入、清除）修改时发出，用于刷新列表与数据管理界面。
@@ -7,22 +8,20 @@ extension Notification.Name {
     static let repoCacheDidSave = Notification.Name("SwiftStarList.repoCacheDidSave")
 }
 
+@MainActor
 final class RepoCache {
     static let shared = RepoCache()
-    private let cacheDirectory: URL
     private let reposFile: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let logger = Logger(subsystem: "com.swiftstarlist.app", category: "RepoCache")
 
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        cacheDirectory = appSupport.appendingPathComponent("SwiftStarList", isDirectory: true)
+        let cacheDirectory = appSupport.appendingPathComponent("SwiftStarList", isDirectory: true)
         reposFile = cacheDirectory.appendingPathComponent("starred_repos.json")
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
-
-    var fileURL: URL { reposFile }
-    var directoryURL: URL { cacheDirectory }
 
     var lastModified: Date? {
         (try? FileManager.default.attributesOfItem(atPath: reposFile.path)[.modificationDate]) as? Date
@@ -39,7 +38,7 @@ final class RepoCache {
                 NotificationCenter.default.post(name: .repoCacheDidChange, object: self)
             }
         } catch {
-            print("Cache save error: \(error)")
+            logger.error("Cache save failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -49,7 +48,7 @@ final class RepoCache {
             let data = try Data(contentsOf: reposFile)
             return try decoder.decode([StarredRepo].self, from: data)
         } catch {
-            print("Cache load error: \(error)")
+            logger.error("Cache load failed: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

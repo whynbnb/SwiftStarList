@@ -14,12 +14,12 @@ find "$ROOT/SwiftStarList" -name '*.swift' ! -name 'StarListApp.swift' -exec cp 
 cp "$ROOT/scripts/ScreenshotsMain.swift" "$SRC/ScreenshotsMain.swift"
 
 cat > "$WORK/Package.swift" <<'PKG'
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
     name: "Screenshots",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/gonzalezreal/swift-markdown-ui", from: "2.2.0"),
     ],

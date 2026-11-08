@@ -70,7 +70,7 @@ xcodebuild -scheme SwiftStarList build
 # or open SwiftStarList.xcodeproj
 ```
 
-Requires macOS 14 or later.
+Requires macOS 15 or later and Swift 6.
 
 ## Screenshots
 

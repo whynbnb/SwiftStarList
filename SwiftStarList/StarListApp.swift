@@ -37,13 +37,6 @@ struct StarListApp: App {
             DataManagementCommands()
         }
 
-        Window(L.d.dataManagement, id: "data-management") {
-            DataManagementView(settingsManager: settingsManager)
-                .environmentObject(settingsManager)
-                .preferredColorScheme(settingsManager.settings.theme.resolvedColorScheme)
-        }
-        .defaultSize(width: 900, height: 620)
-
         Settings {
             SettingsView(settingsManager: settingsManager)
                 .preferredColorScheme(settingsManager.settings.theme.resolvedColorScheme)
@@ -60,12 +53,13 @@ struct StarListApp: App {
 }
 
 private struct DataManagementCommands: Commands {
-    @Environment(\.openWindow) private var openWindow
-
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button(L.d.openDataManagement) {
-                openWindow(id: "data-management")
+                DataManagementWindowController.shared.show(
+                    settingsManager: SettingsManager.shared,
+                    returnWindow: NSApp.keyWindow ?? NSApp.mainWindow
+                )
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
         }

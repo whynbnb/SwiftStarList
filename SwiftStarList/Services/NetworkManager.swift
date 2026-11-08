@@ -19,7 +19,7 @@ enum NetworkError: LocalizedError {
     }
 }
 
-final class NetworkManager {
+final class NetworkManager: @unchecked Sendable {
     static let shared = NetworkManager()
     private init() {}
 

@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 
+@MainActor
 final class AvatarCache {
     static let shared = AvatarCache()
     private var memoryCache: NSCache<NSString, NSImage>

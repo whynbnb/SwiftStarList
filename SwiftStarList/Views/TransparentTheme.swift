@@ -1,7 +1,8 @@
 import SwiftUI
-import MarkdownUI
+@preconcurrency import MarkdownUI
 
 extension Theme {
+    @MainActor
     static let transparent = Theme()
         .text {
             ForegroundColor(.primary)

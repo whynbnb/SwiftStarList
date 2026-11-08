@@ -1,12 +1,5 @@
 import Foundation
 
-extension L {
-    /// 配置导入/导出文案
-    static var c: ConfigStrings {
-        AppLanguage.resolved == .zh ? .zh : .en
-    }
-}
-
 struct ConfigStrings {
     let configuration: String
     let exportConfiguration: String

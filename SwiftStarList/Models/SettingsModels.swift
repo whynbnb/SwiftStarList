@@ -16,7 +16,7 @@ enum AppLanguage: String, CaseIterable, Codable {
 
     /// 实际生效的语言：显式选择优先，`.system` 时跟随系统首选语言。
     static var resolved: AppLanguage {
-        resolve(SettingsManager.shared.settings.language)
+        L.language
     }
 
     static func resolve(_ selected: AppLanguage) -> AppLanguage {
@@ -51,6 +51,7 @@ enum AppTheme: String, CaseIterable, Codable {
         }
     }
 
+    @MainActor
     var appearance: NSAppearance? {
         switch self {
         case .system: return nil
@@ -59,6 +60,7 @@ enum AppTheme: String, CaseIterable, Codable {
         }
     }
 
+    @MainActor
     var resolvedAppearance: NSAppearance {
         switch self {
         case .light: return NSAppearance(named: .aqua)!
@@ -72,6 +74,7 @@ enum AppTheme: String, CaseIterable, Codable {
         }
     }
 
+    @MainActor
     var resolvedColorScheme: ColorScheme? {
         switch self {
         case .system:

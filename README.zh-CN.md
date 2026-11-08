@@ -70,7 +70,7 @@ xcodebuild -scheme SwiftStarList build
 # 或双击 SwiftStarList.xcodeproj
 ```
 
-需要 macOS 14 或更高版本。
+需要 macOS 15 或更高版本，并使用 Swift 6。
 
 ## 截图
 

@@ -34,6 +34,7 @@
 		A10027 /* SnapshotViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10027; };
 		A10028 /* ConfigArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10028; };
 		A10029 /* ConfigStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10029; };
+		A10030 /* DataManagementWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10030; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 		B10027 /* SnapshotViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotViews.swift; sourceTree = "<group>"; };
 		B10028 /* ConfigArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigArchive.swift; sourceTree = "<group>"; };
 		B10029 /* ConfigStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigStrings.swift; sourceTree = "<group>"; };
+		B10030 /* DataManagementWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,6 +167,7 @@
 				B10016 /* TransparentTheme.swift */,
 				B10026 /* DataManagementView.swift */,
 				B10027 /* SnapshotViews.swift */,
+				B10030 /* DataManagementWindowController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -270,6 +273,7 @@
 				A10027 /* SnapshotViews.swift in Sources */,
 				A10028 /* ConfigArchive.swift in Sources */,
 				A10029 /* ConfigStrings.swift in Sources */,
+				A10030 /* DataManagementWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -336,7 +340,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -392,7 +396,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -424,7 +428,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.swiftstarlist.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -452,7 +456,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.swiftstarlist.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};

@@ -1,5 +1,5 @@
 import SwiftUI
-import MarkdownUI
+@preconcurrency import MarkdownUI
 
 struct RepoDetailView: View {
     let repo: StarredRepo
