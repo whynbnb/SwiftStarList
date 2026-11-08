@@ -227,6 +227,8 @@ struct AppSettings: Codable {
     var autoAnalyze: Bool
     var language: AppLanguage
     var theme: AppTheme
+    /// 启动时是否自动刷新 GitHub Star 数据。
+    var refreshOnLaunch: Bool
 
     static let `default` = AppSettings(
         githubToken: "",
@@ -234,6 +236,48 @@ struct AppSettings: Codable {
         llmConfig: .default,
         autoAnalyze: false,
         language: .system,
-        theme: .system
+        theme: .system,
+        refreshOnLaunch: true
     )
+
+    init(
+        githubToken: String,
+        githubProxyConfig: ProxyConfig,
+        llmConfig: LLMConfig,
+        autoAnalyze: Bool,
+        language: AppLanguage,
+        theme: AppTheme,
+        refreshOnLaunch: Bool = true
+    ) {
+        self.githubToken = githubToken
+        self.githubProxyConfig = githubProxyConfig
+        self.llmConfig = llmConfig
+        self.autoAnalyze = autoAnalyze
+        self.language = language
+        self.theme = theme
+        self.refreshOnLaunch = refreshOnLaunch
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case githubToken
+        case githubProxyConfig
+        case llmConfig
+        case autoAnalyze
+        case language
+        case theme
+        case refreshOnLaunch
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        githubToken = try container.decode(String.self, forKey: .githubToken)
+        githubProxyConfig = try container.decode(ProxyConfig.self, forKey: .githubProxyConfig)
+        llmConfig = try container.decode(LLMConfig.self, forKey: .llmConfig)
+        autoAnalyze = try container.decode(Bool.self, forKey: .autoAnalyze)
+        language = try container.decode(AppLanguage.self, forKey: .language)
+        theme = try container.decode(AppTheme.self, forKey: .theme)
+        // 旧版本没有该字段时默认开启，保持原有启动刷新行为。
+        refreshOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .refreshOnLaunch) ?? true
+    }
 }

@@ -72,8 +72,10 @@ struct StarListView: View {
             }
             .task {
                 viewModel.loadFromCache()
-                // 有缓存时也继续后台刷新；失败会显示非阻塞错误提示。
-                await viewModel.fetchAll(settings: settingsManager.settings)
+                // 关闭「打开时刷新」后优先使用缓存；首次运行没有缓存时仍需拉取一次。
+                if settingsManager.settings.refreshOnLaunch || viewModel.repos.isEmpty {
+                    await viewModel.fetchAll(settings: settingsManager.settings)
+                }
             }
         } detail: {
             if let repo = selectedRepo {

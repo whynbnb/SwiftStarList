@@ -121,6 +121,8 @@ struct Strings {
     let languageSection: String
     let generalTab: String
     let themeSection: String
+    let refreshOnLaunch: String
+    let refreshOnLaunchHint: String
     let systemLanguage: String
     let systemTheme: String
     let lightTheme: String
@@ -248,6 +250,8 @@ struct Strings {
         languageSection: "语言",
         generalTab: "通用",
         themeSection: "外观",
+        refreshOnLaunch: "打开时刷新 GitHub 数据",
+        refreshOnLaunchHint: "关闭后将优先使用本地缓存，仍可随时手动刷新。",
         systemLanguage: "跟随系统",
         systemTheme: "跟随系统",
         lightTheme: "浅色",
@@ -376,6 +380,8 @@ struct Strings {
         languageSection: "Language",
         generalTab: "General",
         themeSection: "Appearance",
+        refreshOnLaunch: "Refresh GitHub data on launch",
+        refreshOnLaunchHint: "When off, cached data is used first. You can still refresh manually at any time.",
         systemLanguage: "System",
         systemTheme: "System",
         lightTheme: "Light",

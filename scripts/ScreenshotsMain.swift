@@ -120,8 +120,8 @@ struct ScreenshotMain {
             try? FileManager.default.removeItem(at: directory)
         case "settings-general":
             renderHosting(
-                SettingsShot(manager: manager, tab: .general),
-                size: CGSize(width: 480, height: 550),
+                SettingsShot(manager: manager, tab: .general, contentHeight: 560),
+                size: CGSize(width: 480, height: 640),
                 to: outputDirectory.appendingPathComponent("settings-general-\(language).png")
             )
         case "settings-about":
@@ -849,6 +849,7 @@ private struct DetailPreview: View {
 private struct SettingsShot: View {
     let manager: SettingsManager
     var tab: SettingsTab = .llm
+    var contentHeight: CGFloat = 470
 
     var body: some View {
         VStack(spacing: 0) {
@@ -869,7 +870,7 @@ private struct SettingsShot: View {
                     SettingsView(settingsManager: manager).llmTab
                 }
             }
-            .frame(width: 480, height: 470)
+            .frame(width: 480, height: contentHeight)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(nsColor: .windowBackgroundColor))

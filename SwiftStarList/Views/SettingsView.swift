@@ -118,6 +118,12 @@ struct SettingsView: View {
             }
 
             Section(L.d.dataManagement) {
+                Toggle(L.s.refreshOnLaunch, isOn: $settingsManager.settings.refreshOnLaunch)
+
+                Text(L.s.refreshOnLaunchHint)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
                 Button {
                     DataManagementWindowController.shared.show(
                         settingsManager: settingsManager,

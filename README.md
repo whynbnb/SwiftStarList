@@ -63,6 +63,8 @@ If you use a local LLM service or a proxy on your LAN, macOS may ask for Local N
 
 The whole configuration can be exported and imported from Settings → General. Credentials are included by default; disable “Include credentials” if you do not want to write secrets to the file.
 
+The star list refreshes on every launch by default. Turn off “Refresh GitHub data on launch” in Settings → General to start from cached data and refresh manually.
+
 ![General settings](docs/settings-general-en.png)
 
 ## Build
