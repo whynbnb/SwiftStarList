@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showToken = false
     @State private var editingProfileID: UUID?
     @State private var selectedTab: SettingsTab
+    @Environment(\.openWindow) private var openWindow
 
     init(settingsManager: SettingsManager, initialTab: SettingsTab = .general) {
         _settingsManager = ObservedObject(wrappedValue: settingsManager)
@@ -62,6 +63,14 @@ struct SettingsView: View {
                     ForEach(AppTheme.allCases, id: \.self) { theme in
                         Text(theme.displayName).tag(theme)
                     }
+                }
+            }
+
+            Section(L.d.dataManagement) {
+                Button {
+                    openWindow(id: "data-management")
+                } label: {
+                    Label(L.d.openDataManagement, systemImage: "externaldrive")
                 }
             }
         }

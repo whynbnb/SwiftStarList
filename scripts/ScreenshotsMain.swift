@@ -70,6 +70,40 @@ struct ScreenshotMain {
                 size: CGSize(width: 1200, height: 860),
                 to: outputDirectory.appendingPathComponent("overview-\(language).png")
             )
+        case "data":
+            RepoCache.shared.save(sampleRepos)
+            renderHosting(
+                DataManagementView(settingsManager: manager),
+                size: CGSize(width: 900, height: 620),
+                to: outputDirectory.appendingPathComponent("data-\(language).png")
+            )
+        case "snapshots":
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("swiftstarlist-snapshots-\(UUID().uuidString)", isDirectory: true)
+            let store = SnapshotStore(directory: directory)
+            let olderDate = ISO8601DateFormatter().date(from: "2026-10-01T10:00:00Z") ?? Date()
+            let newerDate = ISO8601DateFormatter().date(from: "2026-11-08T10:00:00Z") ?? Date()
+            let older = store.createSnapshot(
+                from: snapshotOld,
+                name: isChinese ? "2026-10-01 快照" : "2026-10-01 Snapshot",
+                createdAt: olderDate
+            )
+            let newer = store.createSnapshot(
+                from: snapshotNew,
+                name: isChinese ? "2026-11-08 快照" : "2026-11-08 Snapshot",
+                createdAt: newerDate
+            )
+            renderHosting(
+                SnapshotsView(
+                    store: store,
+                    currentRepos: snapshotNew,
+                    initialSnapshotID: newer?.id,
+                    initialCompareID: older?.id
+                ),
+                size: CGSize(width: 1000, height: 700),
+                to: outputDirectory.appendingPathComponent("snapshots-\(language).png")
+            )
+            try? FileManager.default.removeItem(at: directory)
         default:
             renderHosting(
                 SettingsShot(manager: manager),
@@ -244,6 +278,164 @@ struct ScreenshotMain {
             cons: ["贡献者规模较小"],
             similarProjects: ["MarkdownKit"],
             recommendation: "适合需要在 SwiftUI 应用中渲染 Markdown 的场景。"
+        )
+    }
+
+    private static var sampleRepos: [StarredRepo] {
+        [
+            StarredRepo(
+                id: 1,
+                name: "swift-markdown-ui",
+                fullName: "gonzalezreal/swift-markdown-ui",
+                owner: RepoOwner(login: "gonzalezreal", avatarUrl: ""),
+                htmlUrl: "https://github.com/gonzalezreal/swift-markdown-ui",
+                description: "Render Markdown in SwiftUI with customizable themes.",
+                stargazersCount: 2476,
+                language: "Swift",
+                topics: ["markdown", "swiftui"],
+                createdAt: "2020-01-01T00:00:00Z",
+                updatedAt: "2026-11-05T00:00:00Z",
+                pushedAt: "2026-11-05T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-09-25T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 2,
+                name: "openai-codex",
+                fullName: "openai/codex",
+                owner: RepoOwner(login: "openai", avatarUrl: ""),
+                htmlUrl: "https://github.com/openai/codex",
+                description: "Lightweight coding agent that runs in your terminal.",
+                stargazersCount: 133540,
+                language: "Rust",
+                topics: ["agent", "cli"],
+                createdAt: "2025-01-01T00:00:00Z",
+                updatedAt: "2026-11-07T00:00:00Z",
+                pushedAt: "2026-11-07T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-07-20T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 3,
+                name: "mitmproxy",
+                fullName: "mitmproxy/mitmproxy",
+                owner: RepoOwner(login: "mitmproxy", avatarUrl: ""),
+                htmlUrl: "https://github.com/mitmproxy/mitmproxy",
+                description: "An interactive TLS-capable intercepting HTTP proxy.",
+                stargazersCount: 46699,
+                language: "Python",
+                topics: ["proxy", "security"],
+                createdAt: "2010-01-01T00:00:00Z",
+                updatedAt: "2026-11-04T00:00:00Z",
+                pushedAt: "2026-11-04T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-07-09T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 4,
+                name: "libdeflate",
+                fullName: "ebiggers/libdeflate",
+                owner: RepoOwner(login: "ebiggers", avatarUrl: ""),
+                htmlUrl: "https://github.com/ebiggers/libdeflate",
+                description: "Heavily optimized library for DEFLATE/zlib/gzip compression.",
+                stargazersCount: 1324,
+                language: "C",
+                topics: ["compression"],
+                createdAt: "2016-01-01T00:00:00Z",
+                updatedAt: "2026-11-06T00:00:00Z",
+                pushedAt: "2026-11-06T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-09-14T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 5,
+                name: "scriban",
+                fullName: "scriban/scriban",
+                owner: RepoOwner(login: "scriban", avatarUrl: ""),
+                htmlUrl: "https://github.com/scriban/scriban",
+                description: "A fast, powerful and safe scripting language for .NET.",
+                stargazersCount: 3989,
+                language: "C#",
+                topics: ["dotnet", "templating"],
+                createdAt: "2016-01-01T00:00:00Z",
+                updatedAt: "2026-10-24T00:00:00Z",
+                pushedAt: "2026-10-24T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-07-29T00:00:00Z"
+            ),
+            StarredRepo(
+                id: 6,
+                name: "herdr",
+                fullName: "herdrdev/herdr",
+                owner: RepoOwner(login: "herdrdev", avatarUrl: ""),
+                htmlUrl: "https://github.com/herdrdev/herdr",
+                description: "The runtime your coding agents live on.",
+                stargazersCount: 48883,
+                language: "Rust",
+                topics: ["agents", "runtime"],
+                createdAt: "2025-01-01T00:00:00Z",
+                updatedAt: "2026-11-03T00:00:00Z",
+                pushedAt: "2026-11-03T00:00:00Z",
+                fork: false,
+                homepage: nil,
+                starredAt: "2026-07-12T00:00:00Z"
+            )
+        ]
+    }
+
+    private static var snapshotOld: [StarredRepo] {
+        [
+            demoRepo(1, "gonzalezreal/swift-markdown-ui", description: "Render Markdown in SwiftUI with customizable themes.", language: "Swift", stars: 2400, starredAt: "2026-09-25T00:00:00Z"),
+            demoRepo(2, "openai/codex", description: "Lightweight coding agent that runs in your terminal.", language: "Rust", stars: 130000, starredAt: "2026-07-20T00:00:00Z"),
+            demoRepo(3, "mitmproxy/mitmproxy", description: "An interactive TLS-capable intercepting HTTP proxy.", language: "Python", stars: 46699, starredAt: "2026-07-09T00:00:00Z"),
+            demoRepo(4, "ebiggers/libdeflate", description: "Heavily optimized library for DEFLATE/zlib/gzip compression.", language: "C", stars: 1300, starredAt: "2026-09-14T00:00:00Z"),
+            demoRepo(5, "scriban/scriban", description: "A fast, powerful and safe scripting language for .NET.", language: "C#", stars: 3989, starredAt: "2026-07-29T00:00:00Z")
+        ]
+    }
+
+    private static var snapshotNew: [StarredRepo] {
+        [
+            demoRepo(1, "gonzalezreal/swift-markdown-ui", description: "Render Markdown in SwiftUI with customizable themes.", language: "Swift", stars: 2476, starredAt: "2026-09-25T00:00:00Z"),
+            demoRepo(2, "openai/codex", description: "Lightweight coding agent that runs in your terminal.", language: "Rust", stars: 133540, starredAt: "2026-07-20T00:00:00Z"),
+            demoRepo(3, "mitmproxy/mitmproxy", description: "An interactive TLS-capable intercepting HTTP proxy.", language: "Python", stars: 46699, starredAt: "2026-07-09T00:00:00Z"),
+            demoRepo(4, "ebiggers/libdeflate", description: "Heavily optimized library for DEFLATE/zlib/gzip compression.", language: "C", stars: 1324, starredAt: "2026-09-14T00:00:00Z"),
+            demoRepo(6, "herdrdev/herdr", description: "The runtime your coding agents live on.", language: "Rust", stars: 48883, starredAt: "2026-07-12T00:00:00Z")
+        ]
+    }
+
+    private static func demoRepo(
+        _ id: Int,
+        _ fullName: String,
+        description: String,
+        language: String,
+        stars: Int,
+        starredAt: String
+    ) -> StarredRepo {
+        let parts = fullName.split(separator: "/")
+        let owner = parts.first.map(String.init) ?? "owner"
+        let name = parts.last.map(String.init) ?? fullName
+
+        return StarredRepo(
+            id: id,
+            name: name,
+            fullName: fullName,
+            owner: RepoOwner(login: owner, avatarUrl: ""),
+            htmlUrl: "https://github.com/\(fullName)",
+            description: description,
+            stargazersCount: stars,
+            language: language,
+            topics: [],
+            createdAt: "2020-01-01T00:00:00Z",
+            updatedAt: "2026-11-05T00:00:00Z",
+            pushedAt: "2026-11-05T00:00:00Z",
+            fork: false,
+            homepage: nil,
+            starredAt: starredAt
         )
     }
 }

@@ -27,6 +27,11 @@
 		A10018 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = B10018; };
 		A10019 /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
 		A10021 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
+		A10023 /* DataStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10023; };
+		A10024 /* StarSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10024; };
+		A10025 /* SnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10025; };
+		A10026 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10026; };
+		A10027 /* SnapshotViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10027; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +65,11 @@
 		B10017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10020 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		B10022 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		B10023 /* DataStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStrings.swift; sourceTree = "<group>"; };
+		B10024 /* StarSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarSnapshot.swift; sourceTree = "<group>"; };
+		B10025 /* SnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotStore.swift; sourceTree = "<group>"; };
+		B10026 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
+		B10027 /* SnapshotViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +119,7 @@
 				B10002 /* GitHubModels.swift */,
 				B10003 /* LLMModels.swift */,
 				B10004 /* SettingsModels.swift */,
+				B10024 /* StarSnapshot.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -124,6 +135,8 @@
 				B10010 /* SettingsManager.swift */,
 				B10020 /* Strings.swift */,
 				B10022 /* CredentialStore.swift */,
+				B10023 /* DataStrings.swift */,
+				B10025 /* SnapshotStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -144,6 +157,8 @@
 				B10014 /* RepoDetailView.swift */,
 				B10015 /* SettingsView.swift */,
 				B10016 /* TransparentTheme.swift */,
+				B10026 /* DataManagementView.swift */,
+				B10027 /* SnapshotViews.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -242,6 +257,11 @@
 				A10016 /* TransparentTheme.swift in Sources */,
 				A10019 /* Strings.swift in Sources */,
 				A10021 /* CredentialStore.swift in Sources */,
+				A10023 /* DataStrings.swift in Sources */,
+				A10024 /* StarSnapshot.swift in Sources */,
+				A10025 /* SnapshotStore.swift in Sources */,
+				A10026 /* DataManagementView.swift in Sources */,
+				A10027 /* SnapshotViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

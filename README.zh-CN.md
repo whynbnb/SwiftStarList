@@ -25,10 +25,20 @@
   - 支持附加提示词，自定义关注点或输出风格
 - 代理支持：系统代理、HTTP、SOCKS5
 - 仓库数据与头像本地缓存
+- Star 数据 JSON / CSV 导入导出
+- 快照保存与变化对比
 
 ## AI 分析
 
 ![AI 分析](docs/analysis-zh.png)
+
+## 数据管理
+
+导入导出 Star 数据，并通过快照查看和对比 Star 列表随时间的变化。
+
+![数据管理](docs/data-zh.png)
+
+![快照对比](docs/snapshots-zh.png)
 
 ## 使用前设置
 

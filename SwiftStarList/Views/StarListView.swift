@@ -1,9 +1,11 @@
 import SwiftUI
+import Combine
 
 struct StarListView: View {
     @ObservedObject var settingsManager: SettingsManager
     @StateObject private var viewModel = StarListViewModel()
     @State private var selectedRepo: StarredRepo?
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         NavigationSplitView {
@@ -51,6 +53,15 @@ struct StarListView: View {
             .navigationTitle(L.s.starListTitle)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300)
             .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button(action: {
+                        openWindow(id: "data-management")
+                    }) {
+                        Image(systemName: "externaldrive")
+                    }
+                    .help(L.d.dataManagement)
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: {
                         Task { await viewModel.fetchAll(settings: settingsManager.settings) }
@@ -77,6 +88,13 @@ struct StarListView: View {
             }
         }
         .navigationSplitViewStyle(.automatic)
+        .onReceive(NotificationCenter.default.publisher(for: .repoCacheDidChange)) { _ in
+            viewModel.reloadFromCache()
+            if let selectedRepo,
+               !viewModel.repos.contains(where: { $0.id == selectedRepo.id }) {
+                self.selectedRepo = nil
+            }
+        }
     }
 
     private var scopeBar: some View {

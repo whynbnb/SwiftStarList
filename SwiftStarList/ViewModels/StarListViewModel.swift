@@ -180,6 +180,19 @@ final class StarListViewModel: ObservableObject {
         }
     }
 
+    /// 导入或清除缓存后同步界面数据
+    func reloadFromCache() {
+        if let cached = cache.load(), !cached.isEmpty {
+            repos = cached
+            isFromCache = true
+            errorMessage = nil
+        } else {
+            repos = []
+            isFromCache = false
+            errorMessage = nil
+        }
+    }
+
     func fetchAll(settings: AppSettings) async {
         guard !isLoading else { return }
         isLoading = true

@@ -33,6 +33,16 @@ struct StarListApp: App {
         .windowToolbarStyle(.unified(showsTitle: true))
         .defaultSize(width: 1000, height: 700)
         .defaultAppStorage(UserDefaults.standard)
+        .commands {
+            DataManagementCommands()
+        }
+
+        Window(L.d.dataManagement, id: "data-management") {
+            DataManagementView(settingsManager: settingsManager)
+                .environmentObject(settingsManager)
+                .preferredColorScheme(settingsManager.settings.theme.resolvedColorScheme)
+        }
+        .defaultSize(width: 900, height: 620)
 
         Settings {
             SettingsView(settingsManager: settingsManager)
@@ -45,6 +55,19 @@ struct StarListApp: App {
                 window.appearance = concrete
                 window.invalidateShadow()
             }
+        }
+    }
+}
+
+private struct DataManagementCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button(L.d.openDataManagement) {
+                openWindow(id: "data-management")
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
         }
     }
 }

@@ -25,10 +25,20 @@ A native macOS app for managing GitHub stars, with AI-powered repository analysi
   - Additional custom prompt for focus areas or style
 - Proxy support: system, HTTP, and SOCKS5
 - Local caching for repository data and avatars
+- Import and export star data as JSON or CSV
+- Snapshots with side-by-side change comparison
 
 ## AI Analysis
 
 ![AI analysis](docs/analysis-en.png)
+
+## Data Management
+
+Import and export your star data, and keep snapshots to review how your stars change over time.
+
+![Data management](docs/data-en.png)
+
+![Snapshot comparison](docs/snapshots-en.png)
 
 ## Setup
 
