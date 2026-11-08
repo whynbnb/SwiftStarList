@@ -98,7 +98,7 @@ xcodebuild -scheme SwiftStarList build
 ![关于](docs/settings-about-zh.png)
 
 - 开发者：[whynbnb](https://github.com/whynbnb)
-- 版本：1.1 (2)
+- 版本：1.2 (3)
 - 开源地址：https://github.com/whynbnb/SwiftStarList
 - 许可证：[MIT](LICENSE)
 

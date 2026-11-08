@@ -8,11 +8,11 @@ enum AppInfo {
     static let licenseURL = URL(string: "https://github.com/whynbnb/SwiftStarList/blob/main/LICENSE")!
 
     static var version: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2"
     }
 
     static var build: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "2"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "3"
     }
 
     static var versionText: String {

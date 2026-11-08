@@ -98,7 +98,7 @@ Screenshots in `docs/` are generated from the app's SwiftUI components:
 ![About](docs/settings-about-en.png)
 
 - Developer: [whynbnb](https://github.com/whynbnb)
-- Version: 1.1 (2)
+- Version: 1.2 (3)
 - Open source: https://github.com/whynbnb/SwiftStarList
 - License: [MIT](LICENSE)
 
