@@ -14,7 +14,6 @@ struct SettingsView: View {
     @State private var showToken = false
     @State private var editingProfileID: UUID?
     @State private var selectedTab: SettingsTab
-    @State private var includeCredentials = false
     @State private var configStatusText: String?
     @State private var configStatusIsError = false
     @State private var pendingImport: AppConfigArchive?
@@ -130,7 +129,7 @@ struct SettingsView: View {
             }
 
             Section(L.c.configuration) {
-                Toggle(L.c.includeCredentials, isOn: $includeCredentials)
+                Toggle(L.c.includeCredentials, isOn: includeCredentialsBinding)
 
                 Text(L.c.includeCredentialsHint)
                     .font(.caption)
@@ -296,6 +295,17 @@ struct SettingsView: View {
         return settingsManager.settings.llmConfig.defaultProfile?.id == profile.id
     }
 
+    private var includeCredentials: Bool {
+        UserDefaults.standard.object(forKey: "exportIncludesCredentials") as? Bool ?? true
+    }
+
+    private var includeCredentialsBinding: Binding<Bool> {
+        Binding(
+            get: { includeCredentials },
+            set: { UserDefaults.standard.set($0, forKey: "exportIncludesCredentials") }
+        )
+    }
+
     private var customPromptBinding: Binding<String> {
         Binding(
             get: { settingsManager.settings.llmConfig.customPrompt ?? "" },
@@ -376,7 +386,11 @@ struct SettingsView: View {
                 includeCredentials: includeCredentials
             )
             try archive.encoded().write(to: url, options: .atomic)
-            showConfigStatus(L.c.exportSucceeded)
+            showConfigStatus(
+                includeCredentials
+                    ? L.c.exportSucceededWithCredentials
+                    : L.c.exportSucceededWithoutCredentials
+            )
         } catch {
             showConfigStatus("\(L.c.exportFailed): \(error.localizedDescription)", isError: true)
         }

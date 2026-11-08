@@ -19,7 +19,28 @@ struct AppConfigArchive: Codable {
     ) -> AppConfigArchive {
         var copy = settings
 
-        if !includeCredentials {
+        if includeCredentials {
+            // 以内存设置为主，但用本地凭据补全缺失字段，避免导出时丢 Key。
+            let credentials = CredentialStore.load()
+
+            if copy.githubToken.isEmpty {
+                copy.githubToken = credentials?.githubToken ?? ""
+            }
+
+            let storedKeys = credentials?.apiKeys ?? [:]
+            for index in copy.llmConfig.profiles.indices {
+                guard copy.llmConfig.profiles[index].apiKey.isEmpty else { continue }
+
+                let profile = copy.llmConfig.profiles[index]
+                if let stored = storedKeys[profile.id.uuidString], !stored.isEmpty {
+                    copy.llmConfig.profiles[index].apiKey = stored
+                } else if let legacyKey = credentials?.apiKey,
+                          !legacyKey.isEmpty,
+                          profile.id == copy.llmConfig.defaultProfile?.id {
+                    copy.llmConfig.profiles[index].apiKey = legacyKey
+                }
+            }
+        } else {
             copy.githubToken = ""
             for index in copy.llmConfig.profiles.indices {
                 copy.llmConfig.profiles[index].apiKey = ""

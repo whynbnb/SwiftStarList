@@ -58,7 +58,7 @@ The file is created with `0600` permissions.
 
 If you use a local LLM service or a proxy on your LAN, macOS may ask for Local Network access. After changing the bundle identifier, grant it again in System Settings → Privacy & Security → Local Network.
 
-The whole configuration can be exported and imported from Settings → General. Credentials are excluded by default and can be included explicitly.
+The whole configuration can be exported and imported from Settings → General. Credentials are included by default; disable “Include credentials” if you do not want to write secrets to the file.
 
 ![General settings](docs/settings-general-en.png)
 
