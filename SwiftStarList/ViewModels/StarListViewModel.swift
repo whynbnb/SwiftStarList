@@ -71,6 +71,7 @@ final class StarListViewModel: ObservableObject {
     @Published var repos: [StarredRepo] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var refreshErrorMessage: String?
     @Published var searchText = ""
     @Published var searchScope: SearchScope = .all
     @Published var sortOption: SortOption = .starredAt
@@ -186,29 +187,53 @@ final class StarListViewModel: ObservableObject {
             repos = cached
             isFromCache = true
             errorMessage = nil
+            refreshErrorMessage = nil
         } else {
             repos = []
             isFromCache = false
             errorMessage = nil
+            refreshErrorMessage = nil
         }
+    }
+
+    func dismissRefreshError() {
+        refreshErrorMessage = nil
     }
 
     func fetchAll(settings: AppSettings) async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
+        refreshErrorMessage = nil
         defer { isLoading = false }
 
         do {
             let allRepos = try await githubService.fetchAllStarredRepos(settings: settings)
             repos = allRepos
             isFromCache = false
+            errorMessage = nil
+            refreshErrorMessage = nil
             cache.save(allRepos)
         } catch {
-            // 刷新失败时保留已有列表/缓存，只在完全没有数据时展示错误页
+            let message = failureMessage(
+                for: error,
+                proxyMode: settings.githubProxyConfig.mode
+            )
+
+            // 刷新失败时保留已有列表/缓存，只在完全没有数据时展示错误页。
             if repos.isEmpty {
-                errorMessage = error.localizedDescription
+                errorMessage = message
+            } else {
+                isFromCache = true
+                refreshErrorMessage = message
             }
         }
+    }
+
+    private func failureMessage(for error: Error, proxyMode: ProxyMode) -> String {
+        let hint = proxyMode == .none
+            ? L.s.requestFailedHint
+            : L.s.proxyRequestFailedHint
+        return "\(error.localizedDescription)\n\(hint)"
     }
 }

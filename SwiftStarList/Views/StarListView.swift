@@ -25,7 +25,10 @@ struct StarListView: View {
                 filterBar
                     .id(settingsManager.languageVersion)
 
-                if viewModel.isFromCache {
+                if let error = viewModel.refreshErrorMessage {
+                    refreshErrorBanner(error)
+                        .id(settingsManager.languageVersion)
+                } else if viewModel.isFromCache {
                     cacheBanner
                 }
 
@@ -68,7 +71,12 @@ struct StarListView: View {
                     Button(action: {
                         Task { await viewModel.fetchAll(settings: settingsManager.settings) }
                     }) {
-                        Image(systemName: "arrow.clockwise")
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
                     }
                     .help(L.s.refresh)
                     .disabled(viewModel.isLoading)
@@ -76,9 +84,8 @@ struct StarListView: View {
             }
             .task {
                 viewModel.loadFromCache()
-                if viewModel.repos.isEmpty {
-                    await viewModel.fetchAll(settings: settingsManager.settings)
-                }
+                // 有缓存时也继续后台刷新；失败会显示非阻塞错误提示。
+                await viewModel.fetchAll(settings: settingsManager.settings)
             }
         } detail: {
             if let repo = selectedRepo {
@@ -158,9 +165,16 @@ struct StarListView: View {
 
     private var cacheBanner: some View {
         HStack(spacing: 6) {
-            Image(systemName: "internaldrive")
-            Text(L.s.showingCache)
-                .lineLimit(1)
+            if viewModel.isLoading {
+                ProgressView()
+                    .controlSize(.mini)
+                Text(L.s.refreshingCache)
+                    .lineLimit(1)
+            } else {
+                Image(systemName: "internaldrive")
+                Text(L.s.showingCache)
+                    .lineLimit(1)
+            }
             Spacer(minLength: 0)
         }
         .font(.system(size: 11))
@@ -169,6 +183,50 @@ struct StarListView: View {
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+        .overlay(alignment: .bottom) { Divider() }
+    }
+
+    private func refreshErrorBanner(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L.s.refreshFailedTitle)
+                    .font(.system(size: 11, weight: .semibold))
+
+                Text(L.s.showingCachedAfterFailure)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+
+                Text(message)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+            }
+
+            Spacer(minLength: 0)
+
+            Button(L.s.retry) {
+                Task { await viewModel.fetchAll(settings: settingsManager.settings) }
+            }
+            .buttonStyle(.borderless)
+            .font(.system(size: 11))
+
+            Button {
+                viewModel.dismissRefreshError()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .buttonStyle(.plain)
+            .help(L.s.dismiss)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.08))
         .overlay(alignment: .bottom) { Divider() }
     }
 

@@ -53,8 +53,14 @@ struct Strings {
     let scopeDescription: String
     let starListTitle: String
     let showingCache: String
+    let refreshingCache: String
     let loading: String
     let loadFailed: String
+    let refreshFailedTitle: String
+    let showingCachedAfterFailure: String
+    let requestFailedHint: String
+    let proxyRequestFailedHint: String
+    let dismiss: String
     let someDataFailed: String
     let retry: String
     let refresh: String
@@ -174,8 +180,14 @@ struct Strings {
         scopeDescription: "描述",
         starListTitle: "Star 列表",
         showingCache: "正在显示本地缓存",
+        refreshingCache: "正在刷新，当前显示缓存",
         loading: "加载中...",
         loadFailed: "加载失败",
+        refreshFailedTitle: "刷新失败",
+        showingCachedAfterFailure: "正在显示上次缓存的数据",
+        requestFailedHint: "请检查网络连接后重试。",
+        proxyRequestFailedHint: "请检查代理地址、端口以及本地网络权限。",
+        dismiss: "关闭",
         someDataFailed: "部分数据加载失败",
         retry: "重试",
         refresh: "刷新",
@@ -296,8 +308,14 @@ struct Strings {
         scopeDescription: "Description",
         starListTitle: "Star List",
         showingCache: "Showing cached data",
+        refreshingCache: "Refreshing — showing cached data",
         loading: "Loading...",
         loadFailed: "Load Failed",
+        refreshFailedTitle: "Refresh Failed",
+        showingCachedAfterFailure: "Showing the last cached data",
+        requestFailedHint: "Check your network connection and try again.",
+        proxyRequestFailedHint: "Check the proxy host, port, and Local Network permission.",
+        dismiss: "Dismiss",
         someDataFailed: "Some data failed to load",
         retry: "Retry",
         refresh: "Refresh",

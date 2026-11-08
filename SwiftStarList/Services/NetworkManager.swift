@@ -107,6 +107,9 @@ final class NetworkManager: @unchecked Sendable {
         }
 
         let config = URLSessionConfiguration.default
+        // 代理地址错误时不要长时间无响应，尽快把错误反馈给界面。
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 300
         switch proxyConfig.mode {
         case .none:
             // 空字典表示不使用任何代理（覆盖系统代理设置）
