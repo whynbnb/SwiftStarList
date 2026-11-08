@@ -30,6 +30,13 @@ struct ScreenshotMain {
         manager.settings.language = isChinese ? .zh : .en
         manager.settings.llmConfig.simpleMode = false
 
+        // 离屏渲染没有应用 bundle 图标，使用脚本生成的图标代替。
+        if let icon = NSImage(
+            contentsOf: outputDirectory.appendingPathComponent("app-icon.png")
+        ) {
+            NSApp.applicationIconImage = icon
+        }
+
         let firstProfile = LLMProfile(
             name: "OpenAI",
             baseURL: "https://api.openai.com",
@@ -109,6 +116,12 @@ struct ScreenshotMain {
                 SettingsShot(manager: manager, tab: .general),
                 size: CGSize(width: 480, height: 550),
                 to: outputDirectory.appendingPathComponent("settings-general-\(language).png")
+            )
+        case "settings-about":
+            renderHosting(
+                SettingsShot(manager: manager, tab: .about),
+                size: CGSize(width: 480, height: 550),
+                to: outputDirectory.appendingPathComponent("settings-about-\(language).png")
             )
         default:
             renderHosting(
@@ -491,7 +504,7 @@ private struct OverviewShot: View {
 
             Spacer()
 
-            Text("Github Star List")
+            Text("SwiftStarList")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.secondary)
 
@@ -770,9 +783,14 @@ private struct SettingsShot: View {
             Divider()
 
             Group {
-                if tab == .general {
+                switch tab {
+                case .general:
                     SettingsView(settingsManager: manager).generalTab
-                } else {
+                case .about:
+                    AboutView()
+                case .github:
+                    SettingsView(settingsManager: manager).githubTab
+                case .llm:
                     SettingsView(settingsManager: manager).llmTab
                 }
             }
@@ -796,7 +814,7 @@ private struct SettingsShot: View {
 
             Spacer()
 
-            Text("Github Star List Settings")
+            Text("SwiftStarList Settings")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.secondary)
 
@@ -818,6 +836,7 @@ private struct SettingsShot: View {
             tab(L.s.generalTab, icon: "gearshape", selected: tab == .general)
             tab(L.s.githubSection, icon: "network", selected: tab == .github)
             tab("LLM", icon: "sparkles", selected: tab == .llm)
+            tab(L.a.aboutTab, icon: "info.circle", selected: tab == .about)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)

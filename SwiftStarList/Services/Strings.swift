@@ -29,6 +29,10 @@ enum L {
     static var c: ConfigStrings {
         language == .zh ? .zh : .en
     }
+
+    static var a: AboutStrings {
+        language == .zh ? .zh : .en
+    }
 }
 
 struct Strings {

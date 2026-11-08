@@ -6,6 +6,7 @@ enum SettingsTab: Hashable {
     case general
     case github
     case llm
+    case about
 }
 
 struct SettingsView: View {
@@ -50,6 +51,10 @@ struct SettingsView: View {
             llmTab
                 .tabItem { Label("LLM", systemImage: "sparkles") }
                 .tag(SettingsTab.llm)
+
+            AboutView()
+                .tabItem { Label(L.a.aboutTab, systemImage: "info.circle") }
+                .tag(SettingsTab.about)
         }
         .id(settingsManager.languageVersion)
         .frame(width: 480, height: 460)
@@ -157,7 +162,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
     }
 
-    private var githubTab: some View {
+    var githubTab: some View {
         Form {
             Section(L.s.githubSection) {
                 HStack {

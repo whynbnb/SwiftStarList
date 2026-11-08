@@ -1,0 +1,1 @@
+"NSLocalNetworkUsageDescription" = "SwiftStarList 需要访问局域网，以连接本地 LLM 服务或网络中的 HTTP/SOCKS 代理。";

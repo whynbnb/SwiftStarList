@@ -1,0 +1,1 @@
+"NSLocalNetworkUsageDescription" = "SwiftStarList needs local network access to connect to local LLM services and HTTP/SOCKS proxies on your network.";

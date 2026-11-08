@@ -1,4 +1,5 @@
 import Foundation
+import Network
 
 enum NetworkError: LocalizedError {
     case invalidURL
@@ -124,12 +125,26 @@ final class NetworkManager: @unchecked Sendable {
             ]
             config.connectionProxyDictionary = proxy
         case .socks:
-            let proxy: [AnyHashable: Any] = [
-                "SOCKSEnable": 1,
-                "SOCKSProxy": proxyConfig.host,
-                "SOCKSPort": proxyConfig.port,
-            ]
-            config.connectionProxyDictionary = proxy
+            // URLSession 的 connectionProxyDictionary 在未指定 SOCKSVersion 时
+            // 可能按 SOCKS4 处理，导致现代 SOCKS5 代理连接失败。
+            // 优先使用 Network 框架的 SOCKS5 配置。
+            if (1...65535).contains(proxyConfig.port),
+               let port = NWEndpoint.Port(rawValue: UInt16(proxyConfig.port)) {
+                let endpoint = NWEndpoint.hostPort(
+                    host: NWEndpoint.Host(proxyConfig.host),
+                    port: port
+                )
+                var proxy = ProxyConfiguration(socksv5Proxy: endpoint)
+                proxy.allowFailover = false
+                config.proxyConfigurations = [proxy]
+            } else {
+                config.connectionProxyDictionary = [
+                    "SOCKSEnable": 1,
+                    "SOCKSProxy": proxyConfig.host,
+                    "SOCKSPort": proxyConfig.port,
+                    "SOCKSVersion": 5,
+                ]
+            }
         }
 
         let session = URLSession(configuration: config)

@@ -6,6 +6,8 @@
 
 English | [简体中文](README.zh-CN.md)
 
+[GitHub](https://github.com/whynbnb/SwiftStarList) · [MIT License](LICENSE)
+
 > Vibe-coded with DeepSeek V4.1 Flash / OpenCode
 
 A native macOS app for managing GitHub stars, with AI-powered repository analysis.
@@ -49,10 +51,12 @@ Configure your GitHub Token and at least one LLM profile before first use:
 The GitHub Token is required to read your starred repositories. The LLM configuration is only needed for AI analysis. Credentials are stored locally at:
 
 ```
-~/Library/Containers/com.swiftstarlist.app/Data/Library/Application Support/SwiftStarList/credentials.json
+~/Library/Containers/me.whynbnb.SwiftStarList/Data/Library/Application Support/SwiftStarList/credentials.json
 ```
 
 The file is created with `0600` permissions.
+
+If you use a local LLM service or a proxy on your LAN, macOS may ask for Local Network access. After changing the bundle identifier, grant it again in System Settings → Privacy & Security → Local Network.
 
 The whole configuration can be exported and imported from Settings → General. Credentials are excluded by default and can be included explicitly.
 
@@ -84,6 +88,15 @@ Screenshots in `docs/` are generated from the app's SwiftUI components:
 
 - [MarkdownUI](https://github.com/gonzalezreal/swift-markdown-ui) - Markdown rendering
 
+## About
+
+![About](docs/settings-about-en.png)
+
+- Developer: [whynbnb](https://github.com/whynbnb)
+- Version: 1.1 (2)
+- Open source: https://github.com/whynbnb/SwiftStarList
+- License: [MIT](LICENSE)
+
 ## License
 
-[MIT](LICENSE) © 2026 0x574859
+[MIT](LICENSE) © 2026 whynbnb

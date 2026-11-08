@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftStarList",
+    defaultLocalization: "en",
     platforms: [.macOS(.v15)],
     products: [
         .executable(name: "SwiftStarList", targets: ["SwiftStarList"]),

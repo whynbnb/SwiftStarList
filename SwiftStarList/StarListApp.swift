@@ -24,7 +24,7 @@ struct StarListApp: App {
     @StateObject private var settingsManager = SettingsManager.shared
 
     var body: some Scene {
-        WindowGroup("Github Star List") {
+        WindowGroup("SwiftStarList") {
             StarListView(settingsManager: settingsManager)
                 .environmentObject(settingsManager)
                 .preferredColorScheme(settingsManager.settings.theme.resolvedColorScheme)
@@ -34,7 +34,7 @@ struct StarListApp: App {
         .defaultSize(width: 1000, height: 700)
         .defaultAppStorage(UserDefaults.standard)
         .commands {
-            DataManagementCommands()
+            AppCommands()
         }
 
         Settings {
@@ -52,8 +52,14 @@ struct StarListApp: App {
     }
 }
 
-private struct DataManagementCommands: Commands {
+private struct AppCommands: Commands {
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            Button(L.a.aboutApp) {
+                AppInfo.showAboutPanel()
+            }
+        }
+
         CommandGroup(after: .newItem) {
             Button(L.d.openDataManagement) {
                 DataManagementWindowController.shared.show(

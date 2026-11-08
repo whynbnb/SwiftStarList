@@ -6,6 +6,8 @@
 
 [English](README.md) | 简体中文
 
+[GitHub](https://github.com/whynbnb/SwiftStarList) · [MIT License](LICENSE)
+
 > Vibe Coding而成（DeepSeek V4.1 Flash / OpenCode）
 
 一款 macOS 原生 GitHub Star 管理工具，支持 AI 智能分析。
@@ -49,10 +51,12 @@
 GitHub Token 用于读取你的 Star 仓库，LLM 配置仅在 AI 分析时使用。凭据保存在本地：
 
 ```
-~/Library/Containers/com.swiftstarlist.app/Data/Library/Application Support/SwiftStarList/credentials.json
+~/Library/Containers/me.whynbnb.SwiftStarList/Data/Library/Application Support/SwiftStarList/credentials.json
 ```
 
 文件权限为 `0600`。
+
+如果使用局域网内的本地 LLM 服务或代理，macOS 可能会请求“本地网络”权限。Bundle ID 变更后，需要在 系统设置 → 隐私与安全性 → 本地网络 中重新授权。
 
 完整配置可在 设置 → 通用 中导出和导入。默认不包含凭据，可手动勾选包含。
 
@@ -84,6 +88,15 @@ xcodebuild -scheme SwiftStarList build
 
 - [MarkdownUI](https://github.com/gonzalezreal/swift-markdown-ui) - Markdown 渲染
 
+## 关于
+
+![关于](docs/settings-about-zh.png)
+
+- 开发者：[whynbnb](https://github.com/whynbnb)
+- 版本：1.1 (2)
+- 开源地址：https://github.com/whynbnb/SwiftStarList
+- 许可证：[MIT](LICENSE)
+
 ## License
 
-[MIT](LICENSE) © 2026 0x574859
+[MIT](LICENSE) © 2026 whynbnb

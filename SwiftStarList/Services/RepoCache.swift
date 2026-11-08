@@ -14,7 +14,7 @@ final class RepoCache {
     private let reposFile: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
-    private let logger = Logger(subsystem: "com.swiftstarlist.app", category: "RepoCache")
+    private let logger = Logger(subsystem: "me.whynbnb.SwiftStarList", category: "RepoCache")
 
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
